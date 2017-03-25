@@ -6,7 +6,7 @@
 from bs4 import BeautifulSoup            # HTML parsing library
 from lxml import html
 
-file= open('Map Data.txt','w')              # open text file to write output
+file= open('MapData.txt','w')              # open text file to write output
 
 with open('kaistmap.osm.xml','r') as f:      # open html file to read data
     page = f.read()
