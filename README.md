@@ -10,13 +10,13 @@ Implementation of virtual gears required for the sport called the Foxhunt game w
 ## Installation
 ### OSM crawling
 
-Install [BeautifulSoup](https://www.crummy.com/software/BeautifulSoup/bs4/doc/#installing-beautiful-soup).
+1. Install [BeautifulSoup](https://www.crummy.com/software/BeautifulSoup/bs4/doc/#installing-beautiful-soup).
 
     $ pip install beautifulsoup4
 
-Export [OpenStreetMap](http://www.openstreetmap.org/export) data that will be used.
-
-Then you can get the results: (e.g.)
+2. Export [OpenStreetMap](http://www.openstreetmap.org/export) data that will be used.
+3. Run our [Python Code](OSMcrawling/MapData_Crawling.py).
+4. Then you can get the results: (e.g.)
 
 	N1
 	2325103531 36.3743666 127.3651685
@@ -33,7 +33,7 @@ We are using OpenCL which is a open source parallel computing environment.
 	
 ### [Unity 3D](https://unity3d.com/)
 In this project, we are using [reinterpret](https://github.com/reinterpretcat/utymap/)'s demo code. Make sure to install correctly. You can also run this demo code on Android.
-![alt tag](README/reinterpret_utymap.jpg)
+![alt tag](README/reinterpret_utymap.png)
 
 ### OpenCL
 OpenCL should be based on your graphics processing unit (GPU). (e.g. AMD, NVIDIA)
