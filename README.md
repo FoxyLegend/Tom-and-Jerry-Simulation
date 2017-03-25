@@ -2,7 +2,7 @@
 Implementation of virtual gears required for the sport called the Foxhunt game where ‘hounds’ hunt down ‘a fox’ by observing the virtual signal calculated from a signal simulation using real GPS and Map data using mobile smartphones and multi-core processing server.
 
 ## Introduction
-![alt tag](introduction.jpg)
+![alt tag](README/introduction.jpg)
 
 ## Documents
 * [2017/03/20] - [Idea pitching]([2017.3.20]_idea_pitching.pdf)
@@ -33,6 +33,7 @@ We are using OpenCL which is a open source parallel computing environment.
 	
 ### [Unity 3D](https://unity3d.com/)
 In this project, we are using [reinterpret](https://github.com/reinterpretcat/utymap/)'s demo code. Make sure to install correctly. You can also run this demo code on Android.
+![alt tag](README/reinterpret_utymap.jpg)
 
 ### OpenCL
 OpenCL should be based on your graphics processing unit (GPU). (e.g. AMD, NVIDIA)
