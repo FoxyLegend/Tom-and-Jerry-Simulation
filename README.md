@@ -7,6 +7,7 @@ Implementation of virtual gears required for the sport called the Foxhunt game w
 ## Documents
 * [2017/03/20] - [Idea pitching]([2017.3.20]_idea_pitching.pdf)
 * [2017/04/05] - [Project document]([2017.4.5]_project_document.pdf)
+* [2017/04/10] - [MOSP (Interim Presentation)]([2017.4.10]_middle_of_semester_presentation.pdf)
 
 ## Installation
 ### OSM crawling
