@@ -38,8 +38,8 @@ Implementation of virtual gears required for the sport called the Foxhunt game w
 ### [Open MPI](https://www.open-mpi.org/)
 We are using OpenCL which is a open source parallel computing environment.
 
-### OpenCL
-OpenCL should be installed based on your graphics processing unit (GPU). (e.g. AMD, NVIDIA)
+### OpenCL-[NVIDIA CUDA](https://developer.nvidia.com/cuda-downloads)
+OpenCL should be installed based on your graphics processing unit (GPU). (e.g. AMD, NVIDIA) We are using CUDA from NVIDIA in this project.
 
 ### [Unity 3D](https://unity3d.com/)
 In this project, we are using [reinterpret](https://github.com/reinterpretcat/utymap/)'s demo code. Make sure to install correctly. You can also run this demo code on Android.
