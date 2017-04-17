@@ -36,7 +36,7 @@ Implementation of virtual gears required for the sport called the Foxhunt game w
 	   2325103531 36.3743666 127.3651685
 
 ### [Open MPI](https://www.open-mpi.org/)
-We are using OpenCL which is a open source parallel computing environment.
+Our first proposal included MPI technology, but now we only consider to use only GPU because it's enough.
 
 ### OpenCL-[NVIDIA CUDA](https://developer.nvidia.com/cuda-downloads)
 OpenCL should be installed based on your graphics processing unit (GPU). (e.g. AMD, NVIDIA) We are using CUDA from NVIDIA in this project.
