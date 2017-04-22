@@ -6,7 +6,7 @@
 from bs4 import BeautifulSoup            # HTML parsing library
 from lxml import html
 
-file= open('MapData.txt','w')              # open text file to write output
+nf= open('MapData.txt','w')              # open text file to write output
 
 with open('kaistmap.osm.xml','r') as f:      # open html file to read data
     page = f.read()
@@ -20,36 +20,35 @@ ways = soup('way', {})
 print "nodes", len(nodes)
 print "ways", len(ways)
 
+nf.write("# nodes\n")
 node_list = []
 for n in nodes:
    node_list += [(n['id'], n['lat'], n['lon'])]
+   tmpstr = "v\t" + n['id'] + "\t" + n['lat'] + "\t" + n['lon'] + "\n"
+   nf.write(tmpstr)
 
-def position(key):
-    for k, lat, lon in node_list:
-        if key == k:
-            return lat, lon
-    return (-1, -1)
-
+nf.write("# polygons\n")
 bnum = 0
 for w in ways:
-    isBuild = False
-    bname = '*NONAME*'
-    for t in w.select("tag"):
-        k = t['k']
-        if k == 'building':
-            isBuild = True
-            bnum += 1
-        if k == 'name':
-            bname = t['v']
+   isBuild = False
+   bname = '_'
+   for t in w.select("tag"):
+      k = t['k']
+      if k == 'building':
+         isBuild = True
+         bnum += 1
+      if k == 'name':
+         bname = t['v']
 
-    if isBuild:
-        print bname
-        file.write(bname.encode('utf8') + '\n')
-        for nd in w.select("nd"):
-            kk = nd['ref']
-            print kk, position(kk)
-            file.write(kk + " " + position(kk)[0] + " " + position(kk)[1] + "\n")
+   if isBuild:
+      tmpstr = "p " + bname.encode('utf8')
+      for nd in w.select("nd"):
+         kk = nd['ref']
+         tmpstr = tmpstr + "\t" + kk;
+         
+      tmpstr = tmpstr + "\n"
+      nf.write(tmpstr)
 
 print "There are ", bnum, "buildings"
 
-file.close()
+nf.close()
