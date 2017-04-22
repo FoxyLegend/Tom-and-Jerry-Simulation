@@ -1,6 +1,11 @@
 # Tom-and-Jerry Simulation ([Transmitter Hunting](https://en.wikipedia.org/wiki/Transmitter_hunting))
 Implementation of virtual gears required for the sport called the Foxhunt game where ‘hounds’ hunt down ‘a fox’ by observing the virtual signal calculated from a signal simulation using real GPS and Map data using mobile smartphones and multi-core processing server. We renamed to Tom-and-Jerry game for intuitive understanding of this game.
 
+## Presentation
+* **MOSP**: click to play the video on YouTube.
+
+[![Middle of Semester Presentation](https://img.youtube.com/vi/RQ_oRsLWNQ4/0.jpg)](https://www.youtube.com/watch?v=RQ_oRsLWNQ4 "Middle of Semester Presentation")
+
 ## Introduction
 ![alt tag](README/introduction.jpg)
 
@@ -31,10 +36,10 @@ Implementation of virtual gears required for the sport called the Foxhunt game w
 	   2325103531 36.3743666 127.3651685
 
 ### [Open MPI](https://www.open-mpi.org/)
-We are using OpenCL which is a open source parallel computing environment.
+Our first proposal included MPI technology, but now we only consider to use only GPU because it's enough.
 
-### OpenCL
-OpenCL should be installed based on your graphics processing unit (GPU). (e.g. AMD, NVIDIA)
+### OpenCL-[NVIDIA CUDA](https://developer.nvidia.com/cuda-downloads)
+OpenCL should be installed based on your graphics processing unit (GPU). (e.g. AMD, NVIDIA) We are using CUDA from NVIDIA in this project.
 
 ### [Unity 3D](https://unity3d.com/)
 In this project, we are using [reinterpret](https://github.com/reinterpretcat/utymap/)'s demo code. Make sure to install correctly. You can also run this demo code on Android.
