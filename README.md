@@ -35,6 +35,14 @@ Implementation of virtual gears required for the sport called the Foxhunt game w
 	   4627616337 36.3743663 127.3656028
 	   2325103531 36.3743666 127.3651685
 
+### Signal Simulation
+**Simulation on: # of signal:360**
+
+[![Signal Simulation](https://img.youtube.com/vi/6H-wo_vZulA/0.jpg)](https://www.youtube.com/watch?v=6H-wo_vZulA "Signal Simulation")
+
+I'm looking for some other method to delete inf. loop of reflection.
+
+
 ### [Open MPI](https://www.open-mpi.org/)
 Our first proposal included MPI technology, but now we only consider to use only GPU because it's enough.
 
