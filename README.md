@@ -39,11 +39,11 @@ Implementation of virtual gears required for the sport called the Foxhunt game w
 first line: i, #of nodes, #of buildings, #of forests
 		
 ### Signal Simulation
-*Reflection Simulation on: # of signal:360
+* Reflection Simulation on: # of signal:360
 
 [![Signal Simulation](https://img.youtube.com/vi/6H-wo_vZulA/0.jpg)](https://www.youtube.com/watch?v=6H-wo_vZulA "Signal Simulation")
 
-*Signal blocking by forests on KAIST MAP
+* Signal blocking by forests on KAIST MAP
 
 [![Signal blocking by forests](https://img.youtube.com/vi/OocRdbA8gdY/0.jpg)](https://www.youtube.com/watch?v=OocRdbA8gdY "Signal blocking by forests")
 
