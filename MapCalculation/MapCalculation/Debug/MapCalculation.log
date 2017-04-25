@@ -1,21 +1,2 @@
-﻿  mapdraw.cpp
-c:\users\user\documents\visual studio 2015\projects\mapcalculation\mapcalculation\mapdraw.cpp(74): warning C4101: 'len' :참조되지 않은 지역 변수입니다.
-c:\users\user\documents\visual studio 2015\projects\mapcalculation\mapcalculation\mapdraw.cpp(74): warning C4101: 'nx' :참조되지 않은 지역 변수입니다.
-c:\users\user\documents\visual studio 2015\projects\mapcalculation\mapcalculation\mapdraw.cpp(74): warning C4101: 'ny' :참조되지 않은 지역 변수입니다.
-c:\users\user\documents\visual studio 2015\projects\mapcalculation\mapcalculation\mapdraw.cpp(74): warning C4101: 'd' :참조되지 않은 지역 변수입니다.
-c:\users\user\documents\visual studio 2015\projects\mapcalculation\mapcalculation\mapdraw.cpp(95): warning C4101: 'k' :참조되지 않은 지역 변수입니다.
-c:\users\user\documents\visual studio 2015\projects\mapcalculation\mapcalculation\mapdraw.cpp(165): warning C4101: 'py' :참조되지 않은 지역 변수입니다.
-c:\users\user\documents\visual studio 2015\projects\mapcalculation\mapcalculation\mapdraw.cpp(164): warning C4101: 'tb' :참조되지 않은 지역 변수입니다.
-c:\users\user\documents\visual studio 2015\projects\mapcalculation\mapcalculation\mapdraw.cpp(173): warning C4101: 'j' :참조되지 않은 지역 변수입니다.
-c:\users\user\documents\visual studio 2015\projects\mapcalculation\mapcalculation\mapdraw.cpp(165): warning C4101: 'px' :참조되지 않은 지역 변수입니다.
-c:\users\user\documents\visual studio 2015\projects\mapcalculation\mapcalculation\mapdraw.cpp(204): warning C4101: 'n2' :참조되지 않은 지역 변수입니다.
-c:\users\user\documents\visual studio 2015\projects\mapcalculation\mapcalculation\mapdraw.cpp(202): warning C4101: 'dy' :참조되지 않은 지역 변수입니다.
-c:\users\user\documents\visual studio 2015\projects\mapcalculation\mapcalculation\mapdraw.cpp(204): warning C4101: 'n1' :참조되지 않은 지역 변수입니다.
-c:\users\user\documents\visual studio 2015\projects\mapcalculation\mapcalculation\mapdraw.cpp(201): warning C4101: 'tb' :참조되지 않은 지역 변수입니다.
-c:\users\user\documents\visual studio 2015\projects\mapcalculation\mapcalculation\mapdraw.cpp(205): warning C4101: 'j' :참조되지 않은 지역 변수입니다.
-c:\users\user\documents\visual studio 2015\projects\mapcalculation\mapcalculation\mapdraw.cpp(202): warning C4101: 'dx' :참조되지 않은 지역 변수입니다.
-c:\users\user\documents\visual studio 2015\projects\mapcalculation\mapcalculation\mapdraw.cpp(257): warning C4101: 'k' :참조되지 않은 지역 변수입니다.
-c:\users\user\documents\visual studio 2015\projects\mapcalculation\mapcalculation\mapdraw.cpp(257): warning C4101: 'j' :참조되지 않은 지역 변수입니다.
-c:\users\user\documents\visual studio 2015\projects\mapcalculation\mapcalculation\mapdraw.cpp(351): warning C4101: 'i' :참조되지 않은 지역 변수입니다.
-  MapCalculation.vcxproj -> C:\Users\user\Documents\Visual Studio 2015\Projects\MapCalculation\Debug\MapCalculation.exe
-  MapCalculation.vcxproj -> C:\Users\user\Documents\Visual Studio 2015\Projects\MapCalculation\Debug\MapCalculation.pdb (Full PDB)
+﻿  MapCalculation.vcxproj -> C:\Users\user\Desktop\CS408\Github\MapCalculation\Debug\MapCalculation.exe
+  MapCalculation.vcxproj -> C:\Users\user\Desktop\CS408\Github\MapCalculation\Debug\MapCalculation.pdb (Full PDB)

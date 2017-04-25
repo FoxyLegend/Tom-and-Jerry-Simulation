@@ -165,7 +165,7 @@ void building_reflection(signal *sigin, signal *sigout) {
 	double px, py;
 	int n1, n2;
 	signal sigtmp;
-	
+
 	//default
 	sigout->dead = true;
 	if (sigin->dead) return;
@@ -203,6 +203,8 @@ void forest_block(signal *sigin, signal *sigout) {
 	double lx1, ly1, lx2, ly2;
 	int n1, n2;
 	int i, j, k;
+	double fdist, tk;
+
 	sigout->dead = false;
 	if (sigin->dead) {
 		sigout->dead = true;
@@ -215,9 +217,7 @@ void forest_block(signal *sigin, signal *sigout) {
 
 		d = (-sigin->vy)*fr->lon + (sigin->vx)*fr->lat + sigin->d;
 		//possibly blocked if...
-		dk = (fr->lon + sigin->vy*d - sigin->x) / sigin->vx;
-		
-		if (-fr->radius <= d && d <= fr->radius && dk > 0.0)
+		if (-fr->radius <= d && d <= fr->radius)
 		{
 			for (k = 0; k < fr->isize - 1; k++)
 			{
@@ -236,15 +236,22 @@ void forest_block(signal *sigin, signal *sigout) {
 				// t = -(T(dot)p1) / (T(dot)(p2 - p1))
 				double tb = Tnx*(lx2 - lx1) + Tny*(ly2 - ly1);
 				//if (tb == 0.0) { // parallel
-					//return false;
+				//return false;
 				//}
 				t = -(Tnx*lx1 + Tny*ly1 + Td) / tb;
 				if (0.0 <= t && t <= 1.0) {
 					px = lx1 + t*(lx2 - lx1);
 					py = ly1 + t*(ly2 - ly1);
 
-					double fdist = dist(sigin->x, sigin->y, px, py);
-					if ((px - sigin->x) / sigin->vx > 0.0) {
+					if (sigin->vx != 0) {
+						tk = (px - sigin->x) / sigin->vx;
+					}
+					else {
+						tk = (py - sigin->y) / sigin->vy;
+					}
+
+					if (tk > 0) {
+						fdist = dist(sigin->x, sigin->y, px, py);
 						if (!sigout->dead || sigout->ss > fdist) {
 							sigout->x = px;
 							sigout->y = py;
@@ -260,7 +267,7 @@ void forest_block(signal *sigin, signal *sigout) {
 
 void signal_calculation() {
 	int i, j, k;
-	double t, px, tk, tdist = 0, fdist = 0, bdist =0;
+	double t, px, py, tk, tdist = 0, fdist = 0, bdist = 0;
 	signal sigtmp;
 	bool possible, fblock = false;
 	for (i = 0; i < N; i++) {
@@ -275,8 +282,15 @@ void signal_calculation() {
 			possible = false;
 			t = (-si->vy)*ax + (si->vx)*ay + si->d;
 			if (-RADIUS <= t && t <= RADIUS) {
-				px = ax + t*si->vy;
-				tk = (px - si->x) / si->vx;
+				if (si->vx != 0) {
+					px = ax + t*si->vy;
+					tk = (px - si->x) / si->vx;
+				}
+				else {
+					py = ay + t*(-si->vx);
+					tk = (py - si->y) / si->vy;
+				}
+
 				if (tk > 0.0) {
 					possible = true;
 					tdist = dist(si->x, si->y, ax, ay);
@@ -285,12 +299,12 @@ void signal_calculation() {
 
 			/*
 			if (possible) {
-				si->ss = tdist;
-				break;
+			si->ss = tdist;
+			break;
 			}
 			else {
-				si->dead = true;
-				break;
+			si->dead = true;
+			break;
 			}
 			*/
 
@@ -319,31 +333,31 @@ void signal_calculation() {
 			si->dead = true;
 			break;
 
-			
+
 			/*
 			if (possible && !fblock && tdist < fdist) {
-				si->ss += tdist;
-				break;
+			si->ss += tdist;
+			break;
 			}
 			else {
-				si->dead = true;
-				break;
+			si->dead = true;
+			break;
 			}
 
 			/*
 			building_reflection(si, &sigtmp);
 			if (sigtmp.dead) {
-				if (fblock && fdist < tdist) {
-					si->dead = true;
-					break;
-				}
+			if (fblock && fdist < tdist) {
+			si->dead = true;
+			break;
+			}
 			}
 			else {
-				bdist = dist(si->x, si->y, sigtmp.x, sigtmp.y);
+			bdist = dist(si->x, si->y, sigtmp.x, sigtmp.y);
 			}
 			if (possible && tdist < bdist) {
-				si->ss += tdist;
-				break;
+			si->ss += tdist;
+			break;
 			}
 
 			signal_deepcpy(&sigtmp, si);
@@ -508,7 +522,7 @@ void display()
 	glLoadIdentity();
 
 	glOrtho(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0);
-	
+
 	glColor3d(0, 1, 0);
 	for (j = 0; j < fnum; j++) {
 		glBegin(GL_LINE_LOOP);
@@ -530,10 +544,10 @@ void display()
 
 	glColor3d(1, 0, 0);
 	glBegin(GL_POLYGON);
-		glVertex3f(gx + PNTSIZE, gy - PNTSIZE, 0.0f);
-		glVertex3f(gx + PNTSIZE, gy + PNTSIZE, 0.0f);
-		glVertex3f(gx - PNTSIZE, gy + PNTSIZE, 0.0f);
-		glVertex3f(gx - PNTSIZE, gy - PNTSIZE, 0.0f);
+	glVertex3f(gx + PNTSIZE, gy - PNTSIZE, 0.0f);
+	glVertex3f(gx + PNTSIZE, gy + PNTSIZE, 0.0f);
+	glVertex3f(gx - PNTSIZE, gy + PNTSIZE, 0.0f);
+	glVertex3f(gx - PNTSIZE, gy - PNTSIZE, 0.0f);
 	glEnd();
 
 	glColor3d(0, 0, 1);
@@ -552,10 +566,10 @@ void display()
 
 	glColor3d(0, 0, 0.5);
 	glBegin(GL_POLYGON);
-		glVertex3f(ax + PNTSIZE, ay - PNTSIZE, 0.0f);
-		glVertex3f(ax + PNTSIZE, ay + PNTSIZE, 0.0f);
-		glVertex3f(ax - PNTSIZE, ay + PNTSIZE, 0.0f);
-		glVertex3f(ax - PNTSIZE, ay - PNTSIZE, 0.0f);
+	glVertex3f(ax + PNTSIZE, ay - PNTSIZE, 0.0f);
+	glVertex3f(ax + PNTSIZE, ay + PNTSIZE, 0.0f);
+	glVertex3f(ax - PNTSIZE, ay + PNTSIZE, 0.0f);
+	glVertex3f(ax - PNTSIZE, ay - PNTSIZE, 0.0f);
 	glEnd();
 
 
