@@ -25,22 +25,27 @@ Implementation of virtual gears required for the sport called the Foxhunt game w
 3. Run our [Python Code](OSMcrawling/MapData_Crawling.py).
 4. Then you can get the results: (e.g.)
 
-	   N1
-	   2325103531 36.3743666 127.3651685
-	   2325103532 36.3740834 127.3651743
-	   2325103536 36.3740856 127.3653625
-	   2325103535 36.3740132 127.3653624
-	   2325103534 36.3740139 127.3662224
-	   2325103533 36.3743676 127.3662207
-	   4627616337 36.3743663 127.3656028
-	   2325103531 36.3743666 127.3651685
-
+		i	949	117	4
+		# nodes
+		n	36.3673981	127.3637097
+		n	36.3674462	127.3638063
+		n	36.3677069	127.3643303
+		n	36.3675444	127.364455
+		n	36.3674521	127.3642694
+		n	36.3674026	127.3641699
+		n	36.3672357	127.3638344
+		b E2-2	0	1	2	3	4	5	6	0
+		
+first line: i, #of nodes, #of buildings, #of forests
+		
 ### Signal Simulation
-**Simulation on: # of signal:360**
+*Reflection Simulation on: # of signal:360
 
-[![Signal Simulation](https://img.youtube.com/vi/OocRdbA8gdY/0.jpg)](https://www.youtube.com/watch?v=OocRdbA8gdY "Signal Simulation")
+[![Signal Simulation](https://img.youtube.com/vi/6H-wo_vZulA/0.jpg)](https://www.youtube.com/watch?v=6H-wo_vZulA "Signal Simulation")
 
-I'm looking for some other method to delete inf. loop of reflection.
+*Blocking Simulation on: # of signal:360, +OSM KAIST MAP
+
+[![Signal Simulation](https://img.youtube.com/vi/6H-wo_vZulA/0.jpg)](https://www.youtube.com/watch?v=6H-wo_vZulA "Signal Simulation")
 
 
 ### [Open MPI](https://www.open-mpi.org/)
