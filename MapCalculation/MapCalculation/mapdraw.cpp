@@ -61,13 +61,13 @@ void signal_set(signal *s, double x, double y, double vx, double vy, double ss, 
 }
 
 void signal_deepcpy(signal *a, signal *b) {
-	if (a->dead) return;
 	b->x = a->x;
 	b->y = a->y;
 	b->vx = a->vx;
 	b->vy = a->vy;
 	b->ss = a->ss;
 	b->d = a->d;
+	b->dead = a->dead;
 }
 
 line* init_line(double x1, double y1, double x2, double y2) {
@@ -87,61 +87,46 @@ void signal_calc(double lx1, double ly1, double lx2, double ly2, signal *in, sig
 	// p' = p1 + t(p2-p1), T(dot)p' = 0
 	// t = -(T(dot)p1) / (T(dot)(p2 - p1))
 	double tb = Tnx*(lx2 - lx1) + Tny*(ly2 - ly1);
-	if (tb == 0.0) { // parallel
-		out->dead = true;
-		return;
-	}
+	out->dead = true;
+	if (tb == 0.0) return; // parallel
+
 	double t = -(Tnx*lx1 + Tny*ly1 + Td) / tb;
 	double px, py, dx, dy, k;
 	px = lx1 + t*(lx2 - lx1);
 	py = ly1 + t*(ly2 - ly1);
-	if (t > 1.0 || t < 0.0) {
-		out->dead = true;
-		return;
-	}
-
-	dx = px - in->x;
-	if (dx != 0) {
-		if (dx*in->vx < 0) {
-			out->dead = true;
-			return;
-		}
-	}
-	else {
-		dy = py - in->y;
-		if (dy != 0) {
-			if (dy*in->vy < 0) {
-				out->dead = true;
-				return;
-			}
+	if (0.0 <= t && t <= 1.0) {
+		if (in->vx != 0.0) {
+			k = (px - in->x) / in->vx;
 		}
 		else {
-			out->dead = true;
-			return;
+			k = (py - in->y) / in->vy;
+		}
+
+		if (k > 0) {
+			double lvx = lx2 - lx1;
+			double lvy = ly2 - ly1;
+			normalize(lvx, lvy);
+			out->x = px;
+			out->y = py;
+			out->vx = in->vx - 2 * (in->vx*(-lvy) + in->vy*(lvx))*(-lvy);
+			out->vy = in->vy - 2 * (in->vx*(-lvy) + in->vy*(lvx))*(lvx);
+			out->ss = dist(in->x, in->y, out->x, out->y); //in->ss + 
+			out->d = -((-out->vy)*out->x + (out->vx)*out->y);
+			out->dead = false;
 		}
 	}
-
-	double lvx = lx2 - lx1;
-	double lvy = ly2 - ly1;
-	normalize(lvx, lvy);
-	out->x = px;
-	out->y = py;
-	out->vx = in->vx - 2 * (in->vx*(-lvy) + in->vy*(lvx))*(-lvy);
-	out->vy = in->vy - 2 * (in->vx*(-lvy) + in->vy*(lvx))*(lvx);
-	out->ss = in->ss + dist(in->x, in->y, out->x, out->y);
-	out->d = -((-out->vy)*px + (out->vx)*py);
 }
 
 void prt(signal *s) {
 	printf("prt: p(%4.3f, %4.3f), v(%f, %f), s(%f)\n", s->x, s->y, s->vx, s->vy, s->ss);
 }
 
-#define N 360
+#define N 3600
 #define EN 8
 #define THRESHOLD 100000
 #define RADIUS 0.03
 #define PNTSIZE 0.005
-#define LINE_SIZE 10
+#define LINE_SIZE 0.02
 int width = 800, height = 800;
 double PI = acos(-1.0);
 signal sig[N];
@@ -161,32 +146,84 @@ double d2r(double deg) {
 }
 
 void building_reflection(signal *sigin, signal *sigout) {
-	double t, tb;
-	double px, py;
+	double Tnx, Tny, Td;
+	double d, dk, t, tb;
+	double px, py, dx, dy;
+	double lx1, ly1, lx2, ly2;
 	int n1, n2;
+	double bdist, tk;
 	signal sigtmp;
+	int i, j, k;
 
 	//default
 	sigout->dead = true;
 	if (sigin->dead) return;
 
-	int i, j, k;
 	for (i = 0; i < bnum; i++) {
 		// calculate reflection
 		building *bd = &Buildings[i];
 
 		t = (-sigin->vy)*bd->lon + (sigin->vx)*bd->lat + sigin->d;
-		if (-bd->radius <= t && t <= bd->radius
-			&& vec_equal_dir(sigin->vx, sigin->vy, (bd->lon - sigin->x), (bd->lat - sigin->y)))
+		if (-bd->radius <= t && t <= bd->radius)
 		{
 			for (k = 0; k < bd->isize - 1; k++)
 			{
+				/*
 				n1 = bd->inodes[k];
 				n2 = bd->inodes[k + 1];
 				signal_calc(Nodes[n1].lon, Nodes[n1].lat, Nodes[n2].lon, Nodes[n2].lat, sigin, &sigtmp);
 				if (!sigtmp.dead) {
-					if (sigout->dead || sigout->ss < sigtmp.ss) {
+					if (sigout->dead || sigtmp.ss < sigout->ss) {
 						signal_deepcpy(&sigtmp, sigout); //tout = out
+					}
+				}
+				*/
+				int n1 = bd->inodes[k];
+				int n2 = bd->inodes[k + 1];
+
+				lx1 = Nodes[n1].lon;
+				ly1 = Nodes[n1].lat;
+				lx2 = Nodes[n2].lon;
+				ly2 = Nodes[n2].lat;
+
+				Tnx = -sigin->vy;
+				Tny = sigin->vx;
+				Td = sigin->d;
+				// p' = p1 + t(p2-p1), T(dot)p' = 0
+				// t = -(T(dot)p1) / (T(dot)(p2 - p1))
+				double tb = Tnx*(lx2 - lx1) + Tny*(ly2 - ly1);
+				//if (tb == 0.0) { // parallel
+				//return false;
+				//}
+				t = -(Tnx*lx1 + Tny*ly1 + Td) / tb;
+				if (0.0 <= t && t <= 1.0) {
+					px = lx1 + t*(lx2 - lx1);
+					py = ly1 + t*(ly2 - ly1);
+
+					if (sigin->vx != 0) {
+						tk = (px - sigin->x) / sigin->vx;
+					}
+					else {
+						tk = (py - sigin->y) / sigin->vy;
+					}
+
+					if (tk > 0) {
+						bdist = dist(sigin->x, sigin->y, px, py);
+						if (sigout->dead || sigout->ss > bdist) { //if marked as dead
+							double lvx = -(ly2 - ly1);
+							double lvy = lx2 - lx1;
+							double len = sqrt(lvx*lvx + lvy*lvy);
+							lvx /= len;
+							lvy /= len;
+
+							sigout->x = px;
+							sigout->y = py;
+							sigout->vx = sigin->vx - 2 * (sigin->vx*lvx + sigin->vy*lvy)*lvx;
+							sigout->vy = sigin->vy - 2 * (sigin->vx*lvy + sigin->vy*lvy)*lvy;
+							sigout->ss = bdist;
+							sigout->d = -((-sigout->vy)*px + (sigout->vx)*py);
+							sigout->dead = false;
+						}
 					}
 				}
 			}
@@ -252,7 +289,7 @@ void forest_block(signal *sigin, signal *sigout) {
 
 					if (tk > 0) {
 						fdist = dist(sigin->x, sigin->y, px, py);
-						if (!sigout->dead || sigout->ss > fdist) {
+						if (!sigout->dead || sigout->ss > fdist) { //if marked as alive
 							sigout->x = px;
 							sigout->y = py;
 							sigout->ss = fdist;
@@ -266,6 +303,7 @@ void forest_block(signal *sigin, signal *sigout) {
 }
 
 void signal_calculation() {
+	printf("signal calculation\n");
 	int i, j, k;
 	double t, px, py, tk, tdist = 0, fdist = 0, bdist = 0;
 	signal sigtmp;
@@ -296,27 +334,16 @@ void signal_calculation() {
 					tdist = dist(si->x, si->y, ax, ay);
 				}
 			}
-
-			/*
-			if (possible) {
-			si->ss = tdist;
-			break;
-			}
-			else {
-			si->dead = true;
-			break;
-			}
-			*/
-
-
+			
+			// blocking test
 			sigtmp.dead = false;
 			forest_block(si, &sigtmp);
 			fblock = sigtmp.dead;
 			fdist = sigtmp.ss;
 			if (fblock) {
 				//fdist = dist(si->x, si->y, sigtmp.x, sigtmp.y);
-				if (possible && tdist < fdist) {
-					si->ss = tdist;
+				if (possible && tdist <= fdist) {
+					si->ss += tdist;
 					break;
 				}
 				else {
@@ -324,44 +351,42 @@ void signal_calculation() {
 					break;
 				}
 			}
-			else {
-				if (possible) {
-					si->ss = tdist;
-					break;
-				}
-			}
-			si->dead = true;
-			break;
 
-
-			/*
-			if (possible && !fblock && tdist < fdist) {
-			si->ss += tdist;
-			break;
-			}
-			else {
-			si->dead = true;
-			break;
-			}
-
+			// reflection test
 			/*
 			building_reflection(si, &sigtmp);
-			if (sigtmp.dead) {
-			if (fblock && fdist < tdist) {
-			si->dead = true;
-			break;
-			}
-			}
-			else {
-			bdist = dist(si->x, si->y, sigtmp.x, sigtmp.y);
-			}
-			if (possible && tdist < bdist) {
-			si->ss += tdist;
-			break;
+			if (sigtmp.dead) { //no reflection
+				if (possible) {
+					si->ss += tdist;
+					break;
+				}
+				si->dead = true;
+				break;
 			}
 
+			// else 
+			bdist = sigtmp.ss;
+			if (possible && tdist <= bdist) {
+				printf("bdist = %fl, tdist = %fl\n", bdist, tdist);
+				si->ss += tdist;
+				break;
+			}
+			
+			//else 
+			sigtmp.ss = si->ss + bdist;
 			signal_deepcpy(&sigtmp, si);
+			continue; //next loop
+			
 			*/
+			if (possible) {
+				si->ss += tdist;
+				break;
+			}
+			si->dead = true;
+			break;
+		}
+		if (autoend == 0) {
+			si->dead = true;
 		}
 	}
 }
@@ -542,13 +567,6 @@ void display()
 		glEnd();
 	}
 
-	glColor3d(1, 0, 0);
-	glBegin(GL_POLYGON);
-	glVertex3f(gx + PNTSIZE, gy - PNTSIZE, 0.0f);
-	glVertex3f(gx + PNTSIZE, gy + PNTSIZE, 0.0f);
-	glVertex3f(gx - PNTSIZE, gy + PNTSIZE, 0.0f);
-	glVertex3f(gx - PNTSIZE, gy - PNTSIZE, 0.0f);
-	glEnd();
 
 	glColor3d(0, 0, 1);
 	for (int i = 0; i < N; i++) {
@@ -572,6 +590,13 @@ void display()
 	glVertex3f(ax - PNTSIZE, ay - PNTSIZE, 0.0f);
 	glEnd();
 
+	glColor3d(1, 0, 0);
+	glBegin(GL_POLYGON);
+	glVertex3f(gx + PNTSIZE, gy - PNTSIZE, 0.0f);
+	glVertex3f(gx + PNTSIZE, gy + PNTSIZE, 0.0f);
+	glVertex3f(gx - PNTSIZE, gy + PNTSIZE, 0.0f);
+	glVertex3f(gx - PNTSIZE, gy - PNTSIZE, 0.0f);
+	glEnd();
 
 	glFlush();
 }
