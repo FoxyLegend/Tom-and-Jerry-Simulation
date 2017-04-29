@@ -47,6 +47,9 @@ first line: i, #of nodes, #of buildings, #of forests
 
 [![Signal blocking by forests](https://img.youtube.com/vi/OocRdbA8gdY/0.jpg)](https://www.youtube.com/watch?v=OocRdbA8gdY "Signal blocking by forests")
 
+* Signal reflectionon KAIST MAP (sig#3600, long double, sequential)
+
+[![Signal reflection](https://img.youtube.com/vi/gqyN_1NY7mE/0.jpg)](https://www.youtube.com/watch?v=gqyN_1NY7mE "Signal reflection")
 
 ### [Open MPI](https://www.open-mpi.org/)
 Our first proposal included MPI technology, but now we only consider to use only GPU because it's enough.
