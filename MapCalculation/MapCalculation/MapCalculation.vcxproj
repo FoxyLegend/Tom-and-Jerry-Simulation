@@ -18,11 +18,18 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="mapdraw.cpp" />
+    <ClCompile Include="toolfunctions.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="toolfunctions.h" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{C475C200-F90B-46D6-8A91-EE796E9258B3}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>MapCalculation</RootNamespace>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.14393.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -146,13 +153,6 @@
       <AdditionalDependencies>opencl32.lib;glu32.lib;glut32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="mapdraw.cpp" />
-    <ClCompile Include="toolfunctions.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="toolfunctions.h" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

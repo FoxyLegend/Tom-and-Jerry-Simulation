@@ -9,69 +9,109 @@
 #include <string.h>
 #include "toolfunctions.h"
 
-using namespace std;
+#include <time.h>
 
 typedef struct {
-	double x;
-	double y;
-	double vx;
-	double vy;
-	double d;
-	double ss;
+	long double x;
+	long double y;
+	long double vx;
+	long double vy;
+	long double d;
+	long double ss;
 	bool dead;
 } signal;
 
 typedef struct {
-	double x1;
-	double y1;
-	double x2;
-	double y2;
+	long double x1;
+	long double y1;
+	long double x2;
+	long double y2;
 } line;
 
 typedef struct {
-	double lat;
-	double lon;
+	long double x;
+	long double y;
 } node;
 
 typedef struct {
 	int *inodes, isize;
-	double lat, lon, radius;
-} building, forest;
+	long double x, y, radius;
+} polygon;
+
+
+#define N 3600
+#define THRESHOLD 100000
+#define RADIUS 0.03
+#define PNTSIZE 0.005
+#define LINE_SIZE 0.02
+#define AUTO_END 20
+#define kill(s) (s->dead = true)
+int width = 800, height = 800;
+long double PI = acos(-1.0);
+signal sig[N];
+int selection_mode = 0; //generator: 0, detector: 1
+long double gx = -0.198, gy = 0.198; //generation point
+long double ax = -0.07, ay = -0.08; //accepting point
+
+long double scale = 130;
+long double mapx = 127.3623389;
+long double mapy = 36.370617;
+long double aspect = width / (long double)height;
+
+int nnum, bnum, fnum;
 
 node *Nodes;
-building *Buildings;
-forest *Forests;
+polygon *Buildings;
+polygon *Forests;
+line reflecting[50000];
+int nreflect = 0;
+node meeting[50000];
+int nmeeting = 0;
+int point_mode = 0;
 
-void signal_set(signal *s, double x, double y, double vx, double vy, double ss, bool dead) {
+void signal_set(signal *s, long double x, long double y, long double vx, long double vy, long double ss, bool dead) {
 	s->x = x;
 	s->y = y;
-	double len = sqrt(vx*vx + vy*vy);
+	long double len = sqrt(vx*vx + vy*vy);
 	s->vx = vx / len;
 	s->vy = vy / len;
-	s->ss = 0;
+	s->ss = ss;
 
-	double nx, ny, d;
+	long double nx, ny, d;
 	nx = -vy;
 	ny = vx;
 	d = -(nx*x + ny*y);
-
-	s->ss = ss;
+	
 	s->d = d;
 	s->dead = dead;
 }
 
 void signal_deepcpy(signal *a, signal *b) {
+	line *tl = &reflecting[nreflect++];
+	tl->x1 = a->x;
+	tl->y1 = a->y;
+	tl->x2 = b->x;
+	tl->y2 = b->y;
+
+	node *m = &meeting[nmeeting++];
+	m->x = a->x;
+	m->y = a->y;
+
+
 	b->x = a->x;
 	b->y = a->y;
 	b->vx = a->vx;
 	b->vy = a->vy;
 	b->ss = a->ss;
-	b->d = a->d;
+
+	b->d = -(b->x*(-b->vy) + b->y*(b->vx));
 	b->dead = a->dead;
+
+
 }
 
-line* init_line(double x1, double y1, double x2, double y2) {
-	double nx, ny, len, d;
+line* init_line(long double x1, double y1, long double x2, long double y2) {
+	long double nx, ny, len, d;
 	line *l = (line*)malloc(sizeof(line));
 	l->x1 = x1;
 	l->y1 = y1;
@@ -80,22 +120,22 @@ line* init_line(double x1, double y1, double x2, double y2) {
 	return l;
 }
 
-void signal_calc(double lx1, double ly1, double lx2, double ly2, signal *in, signal *out) {
-	double Tnx = -in->vy;
-	double Tny = in->vx;
-	double Td = in->d;
+void signal_calc(long double lx1, long double ly1, long double lx2, long double ly2, signal *in, signal *out) {
+	long double Tnx = -in->vy;
+	long double Tny = in->vx;
+	long double Td = in->d;
 	// p' = p1 + t(p2-p1), T(dot)p' = 0
 	// t = -(T(dot)p1) / (T(dot)(p2 - p1))
-	double tb = Tnx*(lx2 - lx1) + Tny*(ly2 - ly1);
+	long double tb = Tnx*(lx2 - lx1) + Tny*(ly2 - ly1);
 	out->dead = true;
-	if (tb == 0.0) return; // parallel
+	if (fzero(tb)) return; // parallel
 
-	double t = -(Tnx*lx1 + Tny*ly1 + Td) / tb;
-	double px, py, dx, dy, k;
+	long double t = -(Tnx*lx1 + Tny*ly1 + Td) / tb;
+	long double px, py, dx, dy, k;
 	px = lx1 + t*(lx2 - lx1);
 	py = ly1 + t*(ly2 - ly1);
 	if (0.0 <= t && t <= 1.0) {
-		if (in->vx != 0.0) {
+		if (!fzero(in->vx)) {
 			k = (px - in->x) / in->vx;
 		}
 		else {
@@ -103,8 +143,8 @@ void signal_calc(double lx1, double ly1, double lx2, double ly2, signal *in, sig
 		}
 
 		if (k > 0) {
-			double lvx = lx2 - lx1;
-			double lvy = ly2 - ly1;
+			long double lvx = lx2 - lx1;
+			long double lvy = ly2 - ly1;
 			normalize(lvx, lvy);
 			out->x = px;
 			out->y = py;
@@ -121,166 +161,58 @@ void prt(signal *s) {
 	printf("prt: p(%4.3f, %4.3f), v(%f, %f), s(%f)\n", s->x, s->y, s->vx, s->vy, s->ss);
 }
 
-#define N 3600
-#define EN 8
-#define THRESHOLD 100000
-#define RADIUS 0.03
-#define PNTSIZE 0.005
-#define LINE_SIZE 0.02
-int width = 800, height = 800;
-double PI = acos(-1.0);
-signal sig[N];
-int selection_mode = 1; //generator: 0, detector: 1
-double gx = -0.198, gy = 0.198; //generation point
-double ax = -0.07, ay = -0.08; //accepting point
-
-double scale = 130;
-double mapx = 127.3623389;
-double mapy = 36.370617;
-double aspect = width / (double)height;
-
-int nnum, bnum, fnum;
-
-double d2r(double deg) {
+long double d2r(long double deg) {
 	return deg * PI / 180.0;
 }
 
-void building_reflection(signal *sigin, signal *sigout) {
-	double Tnx, Tny, Td;
-	double d, dk, t, tb;
-	double px, py, dx, dy;
-	double lx1, ly1, lx2, ly2;
-	int n1, n2;
-	double bdist, tk;
-	signal sigtmp;
-	int i, j, k;
-
-	//default
-	sigout->dead = true;
-	if (sigin->dead) return;
-
-	for (i = 0; i < bnum; i++) {
-		// calculate reflection
-		building *bd = &Buildings[i];
-
-		t = (-sigin->vy)*bd->lon + (sigin->vx)*bd->lat + sigin->d;
-		if (-bd->radius <= t && t <= bd->radius)
-		{
-			for (k = 0; k < bd->isize - 1; k++)
-			{
-				/*
-				n1 = bd->inodes[k];
-				n2 = bd->inodes[k + 1];
-				signal_calc(Nodes[n1].lon, Nodes[n1].lat, Nodes[n2].lon, Nodes[n2].lat, sigin, &sigtmp);
-				if (!sigtmp.dead) {
-					if (sigout->dead || sigtmp.ss < sigout->ss) {
-						signal_deepcpy(&sigtmp, sigout); //tout = out
-					}
-				}
-				*/
-				int n1 = bd->inodes[k];
-				int n2 = bd->inodes[k + 1];
-
-				lx1 = Nodes[n1].lon;
-				ly1 = Nodes[n1].lat;
-				lx2 = Nodes[n2].lon;
-				ly2 = Nodes[n2].lat;
-
-				Tnx = -sigin->vy;
-				Tny = sigin->vx;
-				Td = sigin->d;
-				// p' = p1 + t(p2-p1), T(dot)p' = 0
-				// t = -(T(dot)p1) / (T(dot)(p2 - p1))
-				double tb = Tnx*(lx2 - lx1) + Tny*(ly2 - ly1);
-				//if (tb == 0.0) { // parallel
-				//return false;
-				//}
-				t = -(Tnx*lx1 + Tny*ly1 + Td) / tb;
-				if (0.0 <= t && t <= 1.0) {
-					px = lx1 + t*(lx2 - lx1);
-					py = ly1 + t*(ly2 - ly1);
-
-					if (sigin->vx != 0) {
-						tk = (px - sigin->x) / sigin->vx;
-					}
-					else {
-						tk = (py - sigin->y) / sigin->vy;
-					}
-
-					if (tk > 0) {
-						bdist = dist(sigin->x, sigin->y, px, py);
-						if (sigout->dead || sigout->ss > bdist) { //if marked as dead
-							double lvx = -(ly2 - ly1);
-							double lvy = lx2 - lx1;
-							double len = sqrt(lvx*lvx + lvy*lvy);
-							lvx /= len;
-							lvy /= len;
-
-							sigout->x = px;
-							sigout->y = py;
-							sigout->vx = sigin->vx - 2 * (sigin->vx*lvx + sigin->vy*lvy)*lvx;
-							sigout->vy = sigin->vy - 2 * (sigin->vx*lvy + sigin->vy*lvy)*lvy;
-							sigout->ss = bdist;
-							sigout->d = -((-sigout->vy)*px + (sigout->vx)*py);
-							sigout->dead = false;
-						}
-					}
-				}
-			}
-		}
-	}
-
-	//if no reflection: sigout is dead
-}
-
 void forest_block(signal *sigin, signal *sigout) {
-	double Tnx, Tny, Td;
-	double d, dk, t, tb;
-	double px, py, dx, dy;
-	double lx1, ly1, lx2, ly2;
+	long double Tnx, Tny, Td;
+	long double d, dk, t, tb;
+	long double px, py, dx, dy;
+	long double lx1, ly1, lx2, ly2;
 	int n1, n2;
 	int i, j, k;
-	double fdist, tk;
+	long double kdist, tk;
 
-	sigout->dead = false;
 	if (sigin->dead) {
 		sigout->dead = true;
 		return;
 	}
+	sigout->dead = false;
 
 	for (i = 0; i < fnum; i++) {
 		// calculate reflection
-		forest *fr = &Forests[i];
+		polygon *p = &Forests[i];
 
-		d = (-sigin->vy)*fr->lon + (sigin->vx)*fr->lat + sigin->d;
+		d = (-sigin->vy)*p->x + (sigin->vx)*p->y + sigin->d;
 		//possibly blocked if...
-		if (-fr->radius <= d && d <= fr->radius)
+		if (-p->radius <= d && d <= p->radius)
 		{
-			for (k = 0; k < fr->isize - 1; k++)
+			for (k = 0; k < p->isize - 1; k++)
 			{
-				int n1 = fr->inodes[k];
-				int n2 = fr->inodes[k + 1];
+				int n1 = p->inodes[k];
+				int n2 = p->inodes[k + 1];
 
-				lx1 = Nodes[n1].lon;
-				ly1 = Nodes[n1].lat;
-				lx2 = Nodes[n2].lon;
-				ly2 = Nodes[n2].lat;
+				lx1 = Nodes[n1].x;
+				ly1 = Nodes[n1].y;
+				lx2 = Nodes[n2].x;
+				ly2 = Nodes[n2].y;
 
 				Tnx = -sigin->vy;
 				Tny = sigin->vx;
 				Td = sigin->d;
 				// p' = p1 + t(p2-p1), T(dot)p' = 0
 				// t = -(T(dot)p1) / (T(dot)(p2 - p1))
-				double tb = Tnx*(lx2 - lx1) + Tny*(ly2 - ly1);
-				//if (tb == 0.0) { // parallel
-				//return false;
-				//}
+				long double tb = Tnx*(lx2 - lx1) + Tny*(ly2 - ly1);
+				if (fzero(tb)) { // parallel
+					break;
+				}
 				t = -(Tnx*lx1 + Tny*ly1 + Td) / tb;
-				if (0.0 <= t && t <= 1.0) {
+				if (0.0 < t && t < 1.0) {
 					px = lx1 + t*(lx2 - lx1);
 					py = ly1 + t*(ly2 - ly1);
 
-					if (sigin->vx != 0) {
+					if (!fzero(sigin->vx)) {
 						tk = (px - sigin->x) / sigin->vx;
 					}
 					else {
@@ -288,11 +220,11 @@ void forest_block(signal *sigin, signal *sigout) {
 					}
 
 					if (tk > 0) {
-						fdist = dist(sigin->x, sigin->y, px, py);
-						if (!sigout->dead || sigout->ss > fdist) { //if marked as alive
+						kdist = dist(sigin->x, sigin->y, px, py);
+						if (!sigout->dead || sigout->ss > kdist) { //if marked as alive
 							sigout->x = px;
 							sigout->y = py;
-							sigout->ss = fdist;
+							sigout->ss = kdist;
 							sigout->dead = true;
 						}
 					}
@@ -302,25 +234,124 @@ void forest_block(signal *sigin, signal *sigout) {
 	}
 }
 
-void signal_calculation() {
-	printf("signal calculation\n");
+void building_reflection(signal *sigin, signal *sigout) {
+	long double Tnx, Tny, Td;
+	long double d, dk, t, tb;
+	long double px, py, dx, dy;
+	long double lx1, ly1, lx2, ly2;
+	int n1, n2;
 	int i, j, k;
-	double t, px, py, tk, tdist = 0, fdist = 0, bdist = 0;
-	signal sigtmp;
-	bool possible, fblock = false;
+	long double kdist, tk;
+
+	if (sigin->dead) {
+		sigout->dead = true;
+		return;
+	}
+	sigout->dead = true;
+
+	for (i = 0; i < bnum; i++) {
+		// calculate reflection
+		polygon *p = &Buildings[i];
+
+		d = (-sigin->vy)*p->x + (sigin->vx)*p->y + sigin->d;
+		//possibly blocked if...
+		if (-p->radius <= d && d <= p->radius)
+		{
+			for (k = 0; k < p->isize - 1; k++)
+			{
+				int n1 = p->inodes[k];
+				int n2 = p->inodes[k + 1];
+
+				lx1 = Nodes[n1].x;
+				ly1 = Nodes[n1].y;
+				lx2 = Nodes[n2].x;
+				ly2 = Nodes[n2].y;
+
+				Tnx = -sigin->vy;
+				Tny = sigin->vx;
+				Td = sigin->d;
+				// p' = p1 + t(p2-p1), T(dot)p' = 0
+				// t = -(T(dot)p1) / (T(dot)(p2 - p1))
+
+				long double tb = Tnx*(lx2 - lx1) + Tny*(ly2 - ly1);
+				if (fzero(tb)) { // parallel
+					break;
+				}
+				t = -(Tnx*lx1 + Tny*ly1 + Td) / tb;
+
+				if (0.0 < t && t < 1.0) {
+					px = lx1 + t*(lx2 - lx1);
+					py = ly1 + t*(ly2 - ly1);
+					
+
+					if (!fzero(sigin->vx)) {
+						tk = (px - sigin->x) / sigin->vx;
+					}
+					else if (!fzero(sigin->vy)) {
+						tk = (py - sigin->y) / sigin->vy;
+					}
+					else {
+						sigout->dead = true;
+						break;
+					}
+
+					if (tk > 0) {
+						long double lnx = -(ly2 - ly1);
+						long double lny = lx2 - lx1;
+
+						if (fzero(lnx*sigin->vx + lny*sigin->vy)) {
+							kdist = tk;
+						}
+						else {
+							kdist = dist(sigin->x, sigin->y, px, py);
+						}
+
+						if (sigout->dead || sigout->ss > kdist) { //if marked as alive
+							normalize(lnx, lny);
+							long double nv = sigin->vx*lnx + sigin->vy*lny;
+							sigout->x = px;
+							sigout->y = py;
+							sigout->vx = sigin->vx - 2 * nv * lnx;
+							sigout->vy = sigin->vy - 2 * nv * lny;
+							sigout->ss = kdist;
+							sigout->dead = false;
+
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+void signal_calculation() {
+	nreflect = 0;
+	nmeeting = 0;
+	int i, j, k;
+	long double t, px, py, tk, tdist = 0, kdist = 0;
+	signal sigref, sigblk;
+	bool possible, block = false, reflect = false;
 	for (i = 0; i < N; i++) {
-		double r = d2r(360.0 * i / (double)N);
+		long double r = d2r(360.0 * i / (long double)N);
 		signal_set(&sig[i], gx, gy, cos(r), sin(r), 0, false);
 	}
 	for (i = 0; i < N; i++) {
 		signal *si = &sig[i];
-		int autoend = 20; //unknown error--> need to be fixed
-		while (!si->dead && --autoend>0) {
+		int autoend = 0; //unknown error--> need to be fixed
+		while (!si->dead && autoend < 4) {
+			autoend++;
+			si->d = -((-si->vy)*si->x + si->vx*si->y);
+			/*
+			if (fzero(sig[i].vx) || fzero(sig[i].vy)) { //currently there is bug
+				sig[i].dead = true;
+				break;
+			}
+			*/
 			// case of detection
 			possible = false;
 			t = (-si->vy)*ax + (si->vx)*ay + si->d;
 			if (-RADIUS <= t && t <= RADIUS) {
-				if (si->vx != 0) {
+				if (!fzero(si->vx)) {
 					px = ax + t*si->vy;
 					tk = (px - si->x) / si->vx;
 				}
@@ -329,63 +360,86 @@ void signal_calculation() {
 					tk = (py - si->y) / si->vy;
 				}
 
-				if (tk > 0.0) {
+				if (tk > 0) {
 					possible = true;
 					tdist = dist(si->x, si->y, ax, ay);
 				}
 			}
 			
+			// reflection test
+			building_reflection(si, &sigref);
 			// blocking test
-			sigtmp.dead = false;
-			forest_block(si, &sigtmp);
-			fblock = sigtmp.dead;
-			fdist = sigtmp.ss;
-			if (fblock) {
-				//fdist = dist(si->x, si->y, sigtmp.x, sigtmp.y);
-				if (possible && tdist <= fdist) {
-					si->ss += tdist;
-					break;
+			forest_block(si, &sigblk);
+			
+			if (sigblk.dead) {
+				if (!sigref.dead && sigref.ss < sigblk.ss) {
+					signal_deepcpy(&sigref, si);
 				}
 				else {
-					si->dead = true;
+					kill(si);
 					break;
 				}
 			}
+			else {
+				signal_deepcpy(&sigref, si);
+			}
+			continue;
 
-			// reflection test
 			/*
-			building_reflection(si, &sigtmp);
-			if (sigtmp.dead) { //no reflection
-				if (possible) {
-					si->ss += tdist;
-					break;
+			if (!sigref.dead) {
+				if (sigblk.dead) {
+					if (possible && tdist < sigref.ss && tdist < sigblk.ss) {
+						si->ss += tdist;
+						break;
+					}
+					if (sigref.ss < sigblk.ss) {
+						sigref.ss += si->ss;
+						signal_deepcpy(&sigref, si);
+						continue;
+					}
+					else {
+						si->dead = true;
+						break;
+					}
 				}
-				si->dead = true;
-				break;
+				else {
+					if (possible && tdist < sigref.ss) {
+						si->ss += tdist;
+						break;
+					}
+					else {
+						sigref.ss += si->ss;
+						signal_deepcpy(&sigref, si);
+						continue;
+					}
+				}
+			}
+			else {
+				if (sigblk.dead) {
+					if (possible && tdist < sigblk.ss) {
+						si->ss += tdist;
+						break;
+					}
+					else {
+						si->dead = true;
+						break;
+					}
+				}
 			}
 
-			// else 
-			bdist = sigtmp.ss;
-			if (possible && tdist <= bdist) {
-				printf("bdist = %fl, tdist = %fl\n", bdist, tdist);
-				si->ss += tdist;
-				break;
-			}
-			
-			//else 
-			sigtmp.ss = si->ss + bdist;
-			signal_deepcpy(&sigtmp, si);
-			continue; //next loop
-			
 			*/
+
 			if (possible) {
 				si->ss += tdist;
 				break;
 			}
-			si->dead = true;
-			break;
+			else {
+				si->dead = true;
+				break;
+			}
+			
 		}
-		if (autoend == 0) {
+		if (autoend == AUTO_END) {
 			si->dead = true;
 		}
 	}
@@ -405,7 +459,7 @@ void load_file() {
 	bool isname = true;
 	int ti;
 	int tokidx;
-	double mxx, mxy, mix, miy;
+	long double mxx, mxy, mix, miy;
 
 	fopen_s(&fp, "MapData.txt", "rt");
 	if (fp != NULL)
@@ -414,17 +468,17 @@ void load_file() {
 		fscanf_s(fp, "i\t%d\t%d\t%d\n", &nnum, &bnum, &fnum);
 		printf("%d, %d, %d\n", nnum, bnum, fnum);
 		Nodes = (node*)malloc(sizeof(node)*nnum);
-		Buildings = (building*)malloc(sizeof(building)*bnum);
-		Forests = (forest*)malloc(sizeof(forest)*fnum);
+		Buildings = (polygon*)malloc(sizeof(polygon)*bnum);
+		Forests = (polygon*)malloc(sizeof(polygon)*fnum);
 
 		while (!feof(fp))
 		{
 			pstr = fgets(stmp, sizeof(stmp), fp);
 			if (pstr == NULL) break;
 			if (pstr[0] == 'n') {
-				sscanf_s(pstr, "n\t%lf\t%lf", &Nodes[nidx].lat, &Nodes[nidx].lon);
-				Nodes[nidx].lon = (Nodes[nidx].lon - mapx)*scale;
-				Nodes[nidx].lat = (Nodes[nidx].lat - mapy)*scale*aspect;
+				sscanf_s(pstr, "n\t%lf\t%lf", &Nodes[nidx].y, &Nodes[nidx].x);
+				Nodes[nidx].x = (Nodes[nidx].x - mapx)*scale;
+				Nodes[nidx].y = (Nodes[nidx].y - mapy)*scale*aspect;
 				nidx++;
 			}
 			if (pstr[0] == 'b') {
@@ -450,20 +504,20 @@ void load_file() {
 					}
 					sscanf_s(token, "%d", &ti);
 					Buildings[bidx].inodes[tokidx] = ti;
-					if (mxx < Nodes[ti].lon)
-						mxx = Nodes[ti].lon;
-					if (mxy < Nodes[ti].lat)
-						mxy = Nodes[ti].lat;
-					if (mix > Nodes[ti].lon)
-						mix = Nodes[ti].lon;
-					if (miy > Nodes[ti].lat)
-						miy = Nodes[ti].lat;
+					if (mxx < Nodes[ti].x)
+						mxx = Nodes[ti].x;
+					if (mxy < Nodes[ti].y)
+						mxy = Nodes[ti].y;
+					if (mix > Nodes[ti].x)
+						mix = Nodes[ti].x;
+					if (miy > Nodes[ti].y)
+						miy = Nodes[ti].y;
 
 					token = strtok_s(NULL, del, &context);
 					tokidx++;
 				}
-				Buildings[bidx].lon = (mxx + mix) / 2;
-				Buildings[bidx].lat = (mxy + miy) / 2;
+				Buildings[bidx].x = (mxx + mix) / 2;
+				Buildings[bidx].y = (mxy + miy) / 2;
 				Buildings[bidx].radius = sqrt((mxx - mix)*(mxx - mix) + (mxy - miy)*(mxy - miy)) / 2;
 
 				bidx++;
@@ -491,20 +545,20 @@ void load_file() {
 					}
 					sscanf_s(token, "%d", &ti);
 					Forests[fidx].inodes[tokidx] = ti;
-					if (mxx < Nodes[ti].lon)
-						mxx = Nodes[ti].lon;
-					if (mxy < Nodes[ti].lat)
-						mxy = Nodes[ti].lat;
-					if (mix > Nodes[ti].lon)
-						mix = Nodes[ti].lon;
-					if (miy > Nodes[ti].lat)
-						miy = Nodes[ti].lat;
+					if (mxx < Nodes[ti].x)
+						mxx = Nodes[ti].x;
+					if (mxy < Nodes[ti].y)
+						mxy = Nodes[ti].y;
+					if (mix > Nodes[ti].x)
+						mix = Nodes[ti].x;
+					if (miy > Nodes[ti].y)
+						miy = Nodes[ti].y;
 
 					token = strtok_s(NULL, del, &context);
 					tokidx++;
 				}
-				Forests[fidx].lon = (mxx + mix) / 2;
-				Forests[fidx].lat = (mxy + miy) / 2;
+				Forests[fidx].x = (mxx + mix) / 2;
+				Forests[fidx].y = (mxy + miy) / 2;
 				Forests[fidx].radius = sqrt((mxx - mix)*(mxx - mix) + (mxy - miy)*(mxy - miy)) / 2;
 
 				fidx++;
@@ -539,48 +593,122 @@ void clean_up() {
 
 void display()
 {
-	int i, j, nidx;
+
+	clock_t tic = clock();
+
+	int i, j, in1, in2;
 	signal_calculation();
+
+	clock_t toc = clock();
+
+	printf("Calculation Elapsed: %d ms.\n", (toc - tic));
+	tic = toc;
 
 	glClearColor(1, 1, 1, 0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
-
 	glOrtho(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0);
+
+	//
+
+	glColor3d(0.9, 0.7, 0.9);
+	for (i = 0; i < nreflect; i++) {
+		line *tl = &reflecting[i];
+		glBegin(GL_LINES);
+		glVertex3f(tl->x1, tl->y1, 0.0f);
+		glVertex3f(tl->x2, tl->y2, 0.0f);
+		glEnd();
+	}
+	/*
+	for (i = 0; i < N; i++) {
+		signal *si = &sig[i];
+		if (!si->dead && si->ss > 0 && si->ss < THRESHOLD) {
+			glColor3d(0.7, 0.7, 0.9);
+			glBegin(GL_LINES);
+			glVertex3f(si->x, si->y, 0.0f);
+			glVertex3f(ax, ay, 0.0f);
+			glEnd();
+			glColor3d(0.7, 0.9, 0.9);
+			glBegin(GL_LINES);
+			glVertex3f(ax, ay, 0.0f);
+			glVertex3f(ax - 0.1*si->vx, ay - 0.1*si->vy, 0.0f);
+			glEnd();
+		}
+
+	}*/
+
+	for (i = 0; i < nmeeting; i++) {
+		node *n = &meeting[i];
+		long double kx = n->x;
+		long double ky = n->y;
+		glColor3d(0, 0.5, 0.5);
+		glBegin(GL_POLYGON);
+		glVertex3f(kx + PNTSIZE, ky - PNTSIZE, 0.0f);
+		glVertex3f(kx + PNTSIZE, ky + PNTSIZE, 0.0f);
+		glVertex3f(kx - PNTSIZE, ky + PNTSIZE, 0.0f);
+		glVertex3f(kx - PNTSIZE, ky - PNTSIZE, 0.0f);
+		glEnd();
+	}
+
+	//
+
 
 	glColor3d(0, 1, 0);
 	for (j = 0; j < fnum; j++) {
-		glBegin(GL_LINE_LOOP);
 		for (i = 0; i < Forests[j].isize - 1; i++) {
-			nidx = Forests[j].inodes[i];
-			glVertex3f(Nodes[nidx].lon, Nodes[nidx].lat, 0.0f);
+			in1 = Forests[j].inodes[i];
+			in2 = Forests[j].inodes[i+1];
+			glBegin(GL_LINES);
+			glVertex3f(Nodes[in1].x, Nodes[in1].y, 0.0f);
+			glVertex3f(Nodes[in2].x, Nodes[in2].y, 0.0f);
+			glEnd();
+			if (point_mode) {
+				glBegin(GL_POLYGON);
+				glVertex3f(Nodes[in1].x + PNTSIZE, Nodes[in1].y - PNTSIZE, 0.0f);
+				glVertex3f(Nodes[in1].x + PNTSIZE, Nodes[in1].y + PNTSIZE, 0.0f);
+				glVertex3f(Nodes[in1].x - PNTSIZE, Nodes[in1].y + PNTSIZE, 0.0f);
+				glVertex3f(Nodes[in1].x - PNTSIZE, Nodes[in1].y - PNTSIZE, 0.0f);
+				glEnd();
+			}
 		}
-		glEnd();
 	}
+
 	glColor3d(0.5, 0.5, 0.5);
 	for (j = 0; j < bnum; j++) {
-		glBegin(GL_LINE_LOOP);
 		for (i = 0; i < Buildings[j].isize - 1; i++) {
-			nidx = Buildings[j].inodes[i];
-			glVertex3f(Nodes[nidx].lon, Nodes[nidx].lat, 0.0f);
+			in1 = Buildings[j].inodes[i];
+			in2 = Buildings[j].inodes[i + 1];
+			glBegin(GL_LINES);
+			glVertex3f(Nodes[in1].x, Nodes[in1].y, 0.0f);
+			glVertex3f(Nodes[in2].x, Nodes[in2].y, 0.0f);
+			glEnd();
+			if (point_mode) {
+				glBegin(GL_POLYGON);
+				glVertex3f(Nodes[in1].x + PNTSIZE, Nodes[in1].y - PNTSIZE, 0.0f);
+				glVertex3f(Nodes[in1].x + PNTSIZE, Nodes[in1].y + PNTSIZE, 0.0f);
+				glVertex3f(Nodes[in1].x - PNTSIZE, Nodes[in1].y + PNTSIZE, 0.0f);
+				glVertex3f(Nodes[in1].x - PNTSIZE, Nodes[in1].y - PNTSIZE, 0.0f);
+				glEnd();
+			}
 		}
-		glEnd();
 	}
 
-
+	/*
 	glColor3d(0, 0, 1);
 	for (int i = 0; i < N; i++) {
 		signal *si = &sig[i];
 		if (!si->dead && si->ss > 0.0 && si->ss < THRESHOLD) {
 			glBegin(GL_LINES);
 			glVertex3f(ax, ay, 0.0f);
-			double m = 1 / si->ss * LINE_SIZE;
-			double tx = m*(-si->vx);
-			double ty = m*(-si->vy);
+			long double m = 1 / si->ss * LINE_SIZE;
+			long double tx = m*(-si->vx);
+			long double ty = m*(-si->vy);
 			glVertex3f(ax + tx, ay + ty, 0.0f);
 			glEnd();
 		}
 	}
+	*/
+
 
 	glColor3d(0, 0, 0.5);
 	glBegin(GL_POLYGON);
@@ -599,15 +727,19 @@ void display()
 	glEnd();
 
 	glFlush();
+
+	toc = clock();
+
+	printf("Drawing Elapsed: %d ms.\n", (toc - tic));
 }
 
 void onMouseButton(int button, int state, int x, int y) {
 	y = height - y - 1;
-	double dx = 2 * (x - width*0.5) / width;
-	double dy = 2 * (y - height*0.5) / height;
+	long double dx = 2 * (x - width*0.5) / width;
+	long double dy = 2 * (y - height*0.5) / height;
 	//printf("mouse click on (%d, %d), (%lf, %lf)\n", x, y, dx, dy);
-	double lon = mapx + dx / scale;
-	double lat = mapy + dy / (scale * aspect);
+	long double lon = mapx + dx / scale;
+	long double lat = mapy + dy / (scale * aspect);
 	//printf("equivalent to (%lf, %lf)\n", lat, lon);
 
 	if (button == GLUT_LEFT_BUTTON) {
@@ -634,6 +766,9 @@ void onMouseDrag(int x, int y) {
 * This part is called in main() function by registering on glutKeyboardFunc(onKeyPress).
 **********************************************************************************/
 void onKeyPress(unsigned char key, int x, int y) {
+	if ((key == 'p')) { //receiver
+		point_mode = !point_mode;
+	}
 	if ((key == 'g')) { //generator
 		selection_mode = 0;
 	}

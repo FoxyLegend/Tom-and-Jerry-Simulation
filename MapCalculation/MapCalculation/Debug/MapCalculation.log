@@ -1,28 +1,26 @@
 ﻿  mapdraw.cpp
-c:\users\user\desktop\cs408\github\mapcalculation\mapcalculation\mapdraw.cpp(74): warning C4101: 'len' :참조되지 않은 지역 변수입니다.
-c:\users\user\desktop\cs408\github\mapcalculation\mapcalculation\mapdraw.cpp(74): warning C4101: 'nx' :참조되지 않은 지역 변수입니다.
-c:\users\user\desktop\cs408\github\mapcalculation\mapcalculation\mapdraw.cpp(74): warning C4101: 'ny' :참조되지 않은 지역 변수입니다.
-c:\users\user\desktop\cs408\github\mapcalculation\mapcalculation\mapdraw.cpp(74): warning C4101: 'd' :참조되지 않은 지역 변수입니다.
-c:\users\user\desktop\cs408\github\mapcalculation\mapcalculation\mapdraw.cpp(94): warning C4101: 'dy' :참조되지 않은 지역 변수입니다.
-c:\users\user\desktop\cs408\github\mapcalculation\mapcalculation\mapdraw.cpp(94): warning C4101: 'dx' :참조되지 않은 지역 변수입니다.
-c:\users\user\desktop\cs408\github\mapcalculation\mapcalculation\mapdraw.cpp(155): warning C4101: 'sigtmp' :참조되지 않은 지역 변수입니다.
-c:\users\user\desktop\cs408\github\mapcalculation\mapcalculation\mapdraw.cpp(153): warning C4101: 'n2' :참조되지 않은 지역 변수입니다.
-c:\users\user\desktop\cs408\github\mapcalculation\mapcalculation\mapdraw.cpp(151): warning C4101: 'dy' :참조되지 않은 지역 변수입니다.
-c:\users\user\desktop\cs408\github\mapcalculation\mapcalculation\mapdraw.cpp(153): warning C4101: 'n1' :참조되지 않은 지역 변수입니다.
-c:\users\user\desktop\cs408\github\mapcalculation\mapcalculation\mapdraw.cpp(150): warning C4101: 'tb' :참조되지 않은 지역 변수입니다.
-c:\users\user\desktop\cs408\github\mapcalculation\mapcalculation\mapdraw.cpp(156): warning C4101: 'j' :참조되지 않은 지역 변수입니다.
-c:\users\user\desktop\cs408\github\mapcalculation\mapcalculation\mapdraw.cpp(150): warning C4101: 'dk' :참조되지 않은 지역 변수입니다.
-c:\users\user\desktop\cs408\github\mapcalculation\mapcalculation\mapdraw.cpp(151): warning C4101: 'dx' :참조되지 않은 지역 변수입니다.
-c:\users\user\desktop\cs408\github\mapcalculation\mapcalculation\mapdraw.cpp(150): warning C4101: 'd' :참조되지 않은 지역 변수입니다.
-c:\users\user\desktop\cs408\github\mapcalculation\mapcalculation\mapdraw.cpp(241): warning C4101: 'n2' :참조되지 않은 지역 변수입니다.
-c:\users\user\desktop\cs408\github\mapcalculation\mapcalculation\mapdraw.cpp(239): warning C4101: 'dy' :참조되지 않은 지역 변수입니다.
-c:\users\user\desktop\cs408\github\mapcalculation\mapcalculation\mapdraw.cpp(241): warning C4101: 'n1' :참조되지 않은 지역 변수입니다.
-c:\users\user\desktop\cs408\github\mapcalculation\mapcalculation\mapdraw.cpp(238): warning C4101: 'tb' :참조되지 않은 지역 변수입니다.
-c:\users\user\desktop\cs408\github\mapcalculation\mapcalculation\mapdraw.cpp(242): warning C4101: 'j' :참조되지 않은 지역 변수입니다.
-c:\users\user\desktop\cs408\github\mapcalculation\mapcalculation\mapdraw.cpp(238): warning C4101: 'dk' :참조되지 않은 지역 변수입니다.
-c:\users\user\desktop\cs408\github\mapcalculation\mapcalculation\mapdraw.cpp(239): warning C4101: 'dx' :참조되지 않은 지역 변수입니다.
-c:\users\user\desktop\cs408\github\mapcalculation\mapcalculation\mapdraw.cpp(307): warning C4101: 'k' :참조되지 않은 지역 변수입니다.
-c:\users\user\desktop\cs408\github\mapcalculation\mapcalculation\mapdraw.cpp(307): warning C4101: 'j' :참조되지 않은 지역 변수입니다.
-c:\users\user\desktop\cs408\github\mapcalculation\mapcalculation\mapdraw.cpp(395): warning C4101: 'i' :참조되지 않은 지역 변수입니다.
-  MapCalculation.vcxproj -> C:\Users\user\Desktop\CS408\Github\MapCalculation\Debug\MapCalculation.exe
-  MapCalculation.vcxproj -> C:\Users\user\Desktop\CS408\Github\MapCalculation\Debug\MapCalculation.pdb (Full PDB)
+c:\users\summersnow\desktop\cs408\mapcalculation\mapcalculation\mapdraw.cpp(114): warning C4101: 'len': unreferenced local variable
+c:\users\summersnow\desktop\cs408\mapcalculation\mapcalculation\mapdraw.cpp(114): warning C4101: 'nx': unreferenced local variable
+c:\users\summersnow\desktop\cs408\mapcalculation\mapcalculation\mapdraw.cpp(114): warning C4101: 'ny': unreferenced local variable
+c:\users\summersnow\desktop\cs408\mapcalculation\mapcalculation\mapdraw.cpp(114): warning C4101: 'd': unreferenced local variable
+c:\users\summersnow\desktop\cs408\mapcalculation\mapcalculation\mapdraw.cpp(134): warning C4101: 'dy': unreferenced local variable
+c:\users\summersnow\desktop\cs408\mapcalculation\mapcalculation\mapdraw.cpp(134): warning C4101: 'dx': unreferenced local variable
+c:\users\summersnow\desktop\cs408\mapcalculation\mapcalculation\mapdraw.cpp(173): warning C4101: 'n2': unreferenced local variable
+c:\users\summersnow\desktop\cs408\mapcalculation\mapcalculation\mapdraw.cpp(171): warning C4101: 'dy': unreferenced local variable
+c:\users\summersnow\desktop\cs408\mapcalculation\mapcalculation\mapdraw.cpp(173): warning C4101: 'n1': unreferenced local variable
+c:\users\summersnow\desktop\cs408\mapcalculation\mapcalculation\mapdraw.cpp(170): warning C4101: 'tb': unreferenced local variable
+c:\users\summersnow\desktop\cs408\mapcalculation\mapcalculation\mapdraw.cpp(174): warning C4101: 'j': unreferenced local variable
+c:\users\summersnow\desktop\cs408\mapcalculation\mapcalculation\mapdraw.cpp(170): warning C4101: 'dk': unreferenced local variable
+c:\users\summersnow\desktop\cs408\mapcalculation\mapcalculation\mapdraw.cpp(171): warning C4101: 'dx': unreferenced local variable
+c:\users\summersnow\desktop\cs408\mapcalculation\mapcalculation\mapdraw.cpp(242): warning C4101: 'n2': unreferenced local variable
+c:\users\summersnow\desktop\cs408\mapcalculation\mapcalculation\mapdraw.cpp(240): warning C4101: 'dy': unreferenced local variable
+c:\users\summersnow\desktop\cs408\mapcalculation\mapcalculation\mapdraw.cpp(242): warning C4101: 'n1': unreferenced local variable
+c:\users\summersnow\desktop\cs408\mapcalculation\mapcalculation\mapdraw.cpp(239): warning C4101: 'tb': unreferenced local variable
+c:\users\summersnow\desktop\cs408\mapcalculation\mapcalculation\mapdraw.cpp(243): warning C4101: 'j': unreferenced local variable
+c:\users\summersnow\desktop\cs408\mapcalculation\mapcalculation\mapdraw.cpp(239): warning C4101: 'dk': unreferenced local variable
+c:\users\summersnow\desktop\cs408\mapcalculation\mapcalculation\mapdraw.cpp(240): warning C4101: 'dx': unreferenced local variable
+c:\users\summersnow\desktop\cs408\mapcalculation\mapcalculation\mapdraw.cpp(330): warning C4101: 'k': unreferenced local variable
+c:\users\summersnow\desktop\cs408\mapcalculation\mapcalculation\mapdraw.cpp(330): warning C4101: 'j': unreferenced local variable
+c:\users\summersnow\desktop\cs408\mapcalculation\mapcalculation\mapdraw.cpp(449): warning C4101: 'i': unreferenced local variable
+  MapCalculation.vcxproj -> C:\Users\SummerSnow\Desktop\CS408\MapCalculation\Debug\MapCalculation.exe
+  MapCalculation.vcxproj -> C:\Users\SummerSnow\Desktop\CS408\MapCalculation\Debug\MapCalculation.pdb (Full PDB)
