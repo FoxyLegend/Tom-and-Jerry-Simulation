@@ -19,7 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="mapdraw.cpp" />
+    <ClCompile Include="mapreflect-int.cpp" />
     <ClCompile Include="toolfunctions.cpp" />
   </ItemGroup>
   <ItemGroup>
