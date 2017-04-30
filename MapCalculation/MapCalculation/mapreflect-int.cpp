@@ -11,15 +11,15 @@
 
 #include <time.h>
 
-#define N 3600
+#define N 7200
 #define THRESHOLD 100000
-#define RADIUS 10
 #define GSIZE 1000
 #define PNTSIZE 300
-#define LINE_SIZE 0
+#define LINE_SIZE 3
 #define AUTO_END 20
 #define kill(s) (s->dead = true)
 #define ORTHO 80000
+#define RADIUS PNTSIZE
 
 typedef struct {
 	my_t x;
@@ -82,6 +82,14 @@ void signal_set(signal *s, my_t x, my_t y, my_t vx, my_t vy, my_t ss, bool dead)
 	s->eid = -1;
 }
 
+void record(signal *a, signal *b, int autoend) {
+	line *tl = &reflecting[autoend][nreflect[autoend]++];
+	tl->x1 = a->x;
+	tl->y1 = a->y;
+	tl->x2 = b->x;
+	tl->y2 = b->y;
+}
+
 void signal_deepcpy(signal *a, signal *b) {
 	b->x = a->x;
 	b->y = a->y;
@@ -89,6 +97,7 @@ void signal_deepcpy(signal *a, signal *b) {
 	b->vy = a->vy;
 	b->ss = a->ss;
 	b->dead = a->dead;
+	b->eid = a->eid;
 }
 
 void prt(signal *s) {
@@ -224,7 +233,10 @@ void building_reflection(signal *sigin, signal *sigout) {
 				}
 
 				my_t t = -(Tnx*lx1 + Tny*ly1 + Td);
-				if (t == 0 || t == tb) continue;
+				if (t == 0 || t == tb) {
+					kill(sigout);
+					return;
+				}
 				if ((0 < t && t < tb) || (tb < t && t < 0)) {
 					my_t px = lx1 + t*(lx2 - lx1) / tb;
 					my_t py = ly1 + t*(ly2 - ly1) / tb;
@@ -263,7 +275,7 @@ void signal_calculation() {
 	int i, j, k;
 	for (i = 0; i < 10; i++) nreflect[i] = 0;
 
-	my_t t, px, py, tk, tdist = 0, kdist = 0;
+	my_t t, px, py, test, tdist = 0, kdist = 0;
 	signal sigref, sigblk;
 	bool possible;
 	for (i = 0; i < N; i++) {
@@ -276,63 +288,35 @@ void signal_calculation() {
 		int autoend = -1; //unknown error--> need to be fixed
 		while (!si->dead && ++autoend < 10) {
 			//prt(si);
-			si->d = -((-si->vy)*si->x + si->vx*si->y);
+			si->d = si->vy*si->x - si->vx*si->y;
 
 			// case of detection
-			/*
 			possible = false;
-			my_t d = (-si->vy)*ax + (si->vx)*ay + si->d;
+			my_t d = - si->vy*ax + si->vx*ay + si->d;
 			my_t vl = veclen(si->vx, si->vy);
+			my_t vq = si->vx*si->vx + si->vy*si->vy;
 			my_t pr = RADIUS*vl;
 			if (-pr <= d && d <= pr) {
 				if (si->vx != 0) {
-					px = ax + d*si->vy;
-					tk = (px - si->x) ^ si->vx;
+					px = ax + (d*si->vy / vq);
+					test = (px - si->x) ^ si->vx;
 				}
 				else {
-					py = ay + d*(-si->vx);
-					tk = (py - si->y) ^ si->vy;
+					py = ay - (d*si->vx / vq);
+					test = (py - si->y) ^ si->vy;
 				}
 
-				if (tk > 0) {
+				if (test > 0) {
 					possible = true;
 					tdist = dist(si->x, si->y, ax, ay);
 				}
 			}
-			*/
-			sigref.dead = true;
-			sigblk.dead = false;
+
+			
 			// reflection test
 			building_reflection(si, &sigref);
 			// blocking test
 			forest_block(si, &sigblk);
-
-			if (sigblk.dead && !sigref.dead && sigblk.ss < sigref.ss) {
-				kill(si);
-				break;
-			}
-
-			if (!sigref.dead) {
-				line *tl = &reflecting[autoend][nreflect[autoend]++];
-				tl->x1 = si->x;
-				tl->y1 = si->y;
-				tl->x2 = sigref.x;
-				tl->y2 = sigref.y;
-
-				//signal_deepcpy(&sigref, si);
-
-				si->x = sigref.x;
-				si->y = sigref.y;
-				si->vx = sigref.vx;
-				si->vy = sigref.vy;
-				si->ss = sigref.ss + si->ss;
-				si->eid = sigref.eid;
-				continue;
-			}
-
-			kill(si);
-			break;
-
 
 			if (!sigref.dead) {
 				if (sigblk.dead) {
@@ -342,11 +326,12 @@ void signal_calculation() {
 					}
 					if (sigref.ss < sigblk.ss) {
 						sigref.ss += si->ss;
+						record(&sigref, si, autoend);
 						signal_deepcpy(&sigref, si);
 						continue;
 					}
 					else {
-						si->dead = true;
+						kill(si);
 						break;
 					}
 				}
@@ -357,6 +342,7 @@ void signal_calculation() {
 					}
 					else {
 						sigref.ss += si->ss;
+						record(&sigref, si, autoend);
 						signal_deepcpy(&sigref, si);
 						continue;
 					}
@@ -369,24 +355,20 @@ void signal_calculation() {
 						break;
 					}
 					else {
-						si->dead = true;
+						kill(si);
 						break;
 					}
 				}
 			}
 
-			if (possible) {
+			if (possible)
 				si->ss += tdist;
-				break;
-			}
-			else {
-				si->dead = true;
-				break;
-			}
-
+			else
+				kill(si);
+			break;
 		}
-		if (autoend == AUTO_END) {
-			si->dead = true;
+		if (autoend == 10) {
+			kill(si);
 		}
 	}
 }
@@ -538,6 +520,26 @@ void clean_up() {
 	free(Forests);
 }
 
+typedef struct {
+	double r;
+	double g;
+	double b;
+} color;
+
+double min(double a, double b) {
+	return a < b ? a : b;
+}
+
+double max(double a, double b) {
+	return a > b ? a : b;
+}
+
+void spec(double val, color *c) {
+	c->r = 0.6*val;
+	c->g = 0.6*val;
+	c->b = 0.8*val;
+}
+
 void display()
 {
 
@@ -640,17 +642,18 @@ void display()
 	glColor3d(0, 0, 1);
 	for (int i = 0; i < N; i++) {
 		signal *si = &sig[i];
-		if (!si->dead && si->ss > 0.0 && si->ss < THRESHOLD) {
+		if (!si->dead && si->ss > 0 && si->ss < THRESHOLD) {
 			glBegin(GL_LINES);
 			glVertex3f(ax, ay, 0.0f);
-			my_t m = LINE_SIZE / si->ss;
+			double m = LINE_SIZE / (double)si->ss;
 			my_t tx = m*(-si->vx);
 			my_t ty = m*(-si->vy);
 			glVertex3f(ax + tx, ay + ty, 0.0f);
 			glEnd();
 		}
 	}
-	
+
+
 	
 
 

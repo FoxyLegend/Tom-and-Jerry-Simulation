@@ -1,12 +1,9 @@
 ﻿  mapreflect-int.cpp
-c:\users\summersnow\desktop\cs408\mapcalculation\mapcalculation\mapreflect-int.cpp(105): warning C4101: 'j': unreferenced local variable
-c:\users\summersnow\desktop\cs408\mapcalculation\mapcalculation\mapreflect-int.cpp(179): warning C4101: 'j': unreferenced local variable
-c:\users\summersnow\desktop\cs408\mapcalculation\mapcalculation\mapreflect-int.cpp(263): warning C4101: 'k': unreferenced local variable
-c:\users\summersnow\desktop\cs408\mapcalculation\mapcalculation\mapreflect-int.cpp(266): warning C4101: 'py': unreferenced local variable
-c:\users\summersnow\desktop\cs408\mapcalculation\mapcalculation\mapreflect-int.cpp(266): warning C4101: 'tk': unreferenced local variable
-c:\users\summersnow\desktop\cs408\mapcalculation\mapcalculation\mapreflect-int.cpp(263): warning C4101: 'j': unreferenced local variable
-c:\users\summersnow\desktop\cs408\mapcalculation\mapcalculation\mapreflect-int.cpp(266): warning C4101: 'px': unreferenced local variable
-c:\users\summersnow\desktop\cs408\mapcalculation\mapcalculation\mapreflect-int.cpp(266): warning C4101: 't': unreferenced local variable
-c:\users\summersnow\desktop\cs408\mapcalculation\mapcalculation\mapreflect-int.cpp(395): warning C4101: 'i': unreferenced local variable
+c:\users\summersnow\desktop\cs408\mapcalculation\mapcalculation\mapreflect-int.cpp(114): warning C4101: 'j': unreferenced local variable
+c:\users\summersnow\desktop\cs408\mapcalculation\mapcalculation\mapreflect-int.cpp(188): warning C4101: 'j': unreferenced local variable
+c:\users\summersnow\desktop\cs408\mapcalculation\mapcalculation\mapreflect-int.cpp(275): warning C4101: 'k': unreferenced local variable
+c:\users\summersnow\desktop\cs408\mapcalculation\mapcalculation\mapreflect-int.cpp(275): warning C4101: 'j': unreferenced local variable
+c:\users\summersnow\desktop\cs408\mapcalculation\mapcalculation\mapreflect-int.cpp(278): warning C4101: 't': unreferenced local variable
+c:\users\summersnow\desktop\cs408\mapcalculation\mapcalculation\mapreflect-int.cpp(377): warning C4101: 'i': unreferenced local variable
   MapCalculation.vcxproj -> C:\Users\SummerSnow\Desktop\CS408\MapCalculation\Debug\MapCalculation.exe
   MapCalculation.vcxproj -> C:\Users\SummerSnow\Desktop\CS408\MapCalculation\Debug\MapCalculation.pdb (Full PDB)
