@@ -39,17 +39,21 @@ Implementation of virtual gears required for the sport called the Foxhunt game w
 first line: i, #of nodes, #of buildings, #of forests
 		
 ### Signal Simulation
-* Reflection Simulation on: # of signal:360
+* [4/22] Reflection Simulation on: # of signal:360
 
 [![Signal Simulation](https://img.youtube.com/vi/6H-wo_vZulA/0.jpg)](https://www.youtube.com/watch?v=6H-wo_vZulA "Signal Simulation")
 
-* Signal blocking by forests on KAIST MAP
+* [4/25] Signal blocking by forests on KAIST MAP
 
 [![Signal blocking by forests](https://img.youtube.com/vi/OocRdbA8gdY/0.jpg)](https://www.youtube.com/watch?v=OocRdbA8gdY "Signal blocking by forests")
 
-* Signal reflectionon KAIST MAP (sig#3600, long double, sequential)
+* [4/29] Signal reflectionon KAIST MAP (sig#3600, long double, sequential)
 
 [![Signal reflection](https://img.youtube.com/vi/gqyN_1NY7mE/0.jpg)](https://www.youtube.com/watch?v=gqyN_1NY7mE "Signal reflection")
+
+* [4/30] Signal reflectionon KAIST MAP (sig#3600, 64bit int, sequential, fixed bug)
+
+[![Signal reflection](https://img.youtube.com/vi/A-gF2tzhoB0/0.jpg)](https://www.youtube.com/watch?v=A-gF2tzhoB0 "Signal reflection")
 
 ### [Open MPI](https://www.open-mpi.org/)
 Our first proposal included MPI technology, but now we only consider to use only GPU because it's enough.
