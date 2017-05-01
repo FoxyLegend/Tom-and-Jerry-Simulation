@@ -18,12 +18,15 @@ Implementation of virtual gears required for the sport called the Foxhunt game w
 ### OSM crawling
 
 1. Install [BeautifulSoup](https://www.crummy.com/software/BeautifulSoup/bs4/doc/#installing-beautiful-soup).
+
 	```
 	$ pip install beautifulsoup4
 	```
+	
 2. Export [OpenStreetMap](http://www.openstreetmap.org/export) data that will be used.
 3. Run our [Python Code](OSMcrawling/MapData_Crawling.py).
 4. Then you can get the results: (e.g.)
+
 	```
 	i	949	117	4
 	# nodes
@@ -35,7 +38,8 @@ Implementation of virtual gears required for the sport called the Foxhunt game w
 	n	36.3674026	127.3641699
 	n	36.3672357	127.3638344
 	b E2-2	0	1	2	3	4	5	6	0
-	```	
+	```
+	
 	first line: i, #of nodes, #of buildings, #of forests
 		
 ### Signal Simulation
@@ -54,6 +58,14 @@ Implementation of virtual gears required for the sport called the Foxhunt game w
 * [4/30] Signal reflectionon KAIST MAP (sig#3600, 64bit int, sequential, fixed bug)
 
 [![Signal reflection](https://img.youtube.com/vi/A-gF2tzhoB0/0.jpg)](https://www.youtube.com/watch?v=A-gF2tzhoB0 "Signal reflection")
+
+* [5/1] Signal reflectionon KAIST MAP
+
+	Number of signals : 172032, max reflection: 10
+	
+	Using GPU: NVIDIA GeForce GTX 650 Ti
+
+[![Signal reflection](https://img.youtube.com/vi/2uKSR1LshKs/0.jpg)](https://www.youtube.com/watch?v=2uKSR1LshKs "Signal reflection")
 
 ### [Open MPI](https://www.open-mpi.org/)
 Our first proposal included MPI technology, but now we only consider to use only GPU because it's enough.
