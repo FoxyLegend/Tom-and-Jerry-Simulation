@@ -59,11 +59,11 @@ Implementation of virtual gears required for the sport called the Foxhunt game w
 
 [![Signal reflection](https://img.youtube.com/vi/A-gF2tzhoB0/0.jpg)](https://www.youtube.com/watch?v=A-gF2tzhoB0 "Signal reflection")
 
-* [5/1] Signal reflectionon KAIST MAP
+* **[5/1] Signal reflectionon KAIST MAP**
 
-	Number of signals : 172032, max reflection: 10
+	- Number of signals : 172032, max reflection: 10
 	
-	Using GPU: NVIDIA GeForce GTX 650 Ti
+	- Using GPU: NVIDIA GeForce GTX 650 Ti
 
 [![Signal reflection](https://img.youtube.com/vi/2uKSR1LshKs/0.jpg)](https://www.youtube.com/watch?v=2uKSR1LshKs "Signal reflection")
 
