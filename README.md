@@ -18,25 +18,25 @@ Implementation of virtual gears required for the sport called the Foxhunt game w
 ### OSM crawling
 
 1. Install [BeautifulSoup](https://www.crummy.com/software/BeautifulSoup/bs4/doc/#installing-beautiful-soup).
-
-        $ pip install beautifulsoup4
-
+	```
+	$ pip install beautifulsoup4
+	```
 2. Export [OpenStreetMap](http://www.openstreetmap.org/export) data that will be used.
 3. Run our [Python Code](OSMcrawling/MapData_Crawling.py).
 4. Then you can get the results: (e.g.)
-
-		i	949	117	4
-		# nodes
-		n	36.3673981	127.3637097
-		n	36.3674462	127.3638063
-		n	36.3677069	127.3643303
-		n	36.3675444	127.364455
-		n	36.3674521	127.3642694
-		n	36.3674026	127.3641699
-		n	36.3672357	127.3638344
-		b E2-2	0	1	2	3	4	5	6	0
-		
-first line: i, #of nodes, #of buildings, #of forests
+	```
+	i	949	117	4
+	# nodes
+	n	36.3673981	127.3637097
+	n	36.3674462	127.3638063
+	n	36.3677069	127.3643303
+	n	36.3675444	127.364455
+	n	36.3674521	127.3642694
+	n	36.3674026	127.3641699
+	n	36.3672357	127.3638344
+	b E2-2	0	1	2	3	4	5	6	0
+	```	
+	first line: i, #of nodes, #of buildings, #of forests
 		
 ### Signal Simulation
 * [4/22] Reflection Simulation on: # of signal:360
