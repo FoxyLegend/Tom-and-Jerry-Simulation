@@ -1,4 +1,3 @@
-
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 
@@ -20,7 +19,7 @@
 #define PNTSIZE 300
 #define AUTO_END 10
 #define ORTHO 80000
-#define RADIUS 3000
+#define RADIUS 1500
 #define RADSCALE 1000000000
 #define LINE_SIZE 0.3
 
@@ -40,16 +39,22 @@ int nnum, bnum, fnum;
 int point_mode = 0;
 
 int width = 800, height = 800;
-signal sig[N];
+signal sig[N], compass[10][32];
 int selection_mode = 0; //generator: 0, detector: 1
+
+clock_t total_testing_time = 0;
 
 node *Nodes;
 polygon *Buildings;
 polygon *Forests;
+info GameInfo;
 
-line ga = {
-	ga.x1 = -21800, ga.y1 = 13200, ga.x2 = -7000, ga.y2 = -8000
-};
+
+////////////////// cuda time
+signal *dev_signals;
+node *dev_nodes;
+polygon *dev_buildings, *dev_forests;
+info *dev_gameinfo;
 
 int toggle[10];
 
@@ -57,8 +62,8 @@ void load_file();
 void clean_up();
 void initialize();
 
-__global__ void signal_calculation (signal *signal_list, 
-		const node *node_list, const polygon *building_list, const polygon *forest_list, const line *gtoa) {
+__global__ void signal_calculation(signal *signal_list,
+	const node *node_list, const polygon *building_list, const polygon *forest_list, const line *gtoa) {
 	my_t gx = gtoa->x1;
 	my_t gy = gtoa->y1;
 	my_t ax = gtoa->x2;
@@ -199,8 +204,8 @@ __global__ void signal_calculation (signal *signal_list,
 					Tnx = -si->vy;
 					Tny = si->vx;
 					Td = -(-si->vy*si->x + si->vx*si->y);//sigin->d;
-																	 // p' = p1 + t(p2-p1), T(dot)p' = 0
-																	 // t = -(T(dot)p1) / (T(dot)(p2 - p1))
+														 // p' = p1 + t(p2-p1), T(dot)p' = 0
+														 // t = -(T(dot)p1) / (T(dot)(p2 - p1))
 					my_t tb = Tnx*(lx2 - lx1) + Tny*(ly2 - ly1);
 
 					if (tb == 0) { // parallel
@@ -225,7 +230,7 @@ __global__ void signal_calculation (signal *signal_list,
 							zy = (si->y - py);
 							kdist = zx*zx + zy*zy;
 							if (!sigblk.dead || sigblk.ss > kdist) { //if marked as alive
-								//printf("kdist = %lld\n", kdist);
+																	 //printf("kdist = %lld\n", kdist);
 								sigblk.x = px;
 								sigblk.y = py;
 								sigblk.ss = kdist;
@@ -236,22 +241,22 @@ __global__ void signal_calculation (signal *signal_list,
 				}
 			}
 		}
-		
+
 		/*
 		if (sigblk.dead) {
-			if (possible && tdist < sigblk.ss) {
-				printf("possible!\n");
-				printf("tdist = %lld ", tdist);
-				printf("sigblk.ss = %lld\n", sigblk.ss);
-				si->ss += sqrt((float)tdist);
-				break;
-			}
-			kill(si);
-			break;
+		if (possible && tdist < sigblk.ss) {
+		printf("possible!\n");
+		printf("tdist = %lld ", tdist);
+		printf("sigblk.ss = %lld\n", sigblk.ss);
+		si->ss += sqrt((float)tdist);
+		break;
+		}
+		kill(si);
+		break;
 		}
 		if (possible) {
-			si->ss += sqrt((float)tdist);
-			break;
+		si->ss += sqrt((float)tdist);
+		break;
 		}
 		kill(si);
 		break;
@@ -310,18 +315,13 @@ __global__ void signal_calculation (signal *signal_list,
 	}
 }
 
-////////////////// cuda time
-signal *dev_signals;
-node *dev_nodes;
-polygon *dev_buildings, *dev_forests;
-line *dev_gtoa;
 
 void freeCudaMemory() {
 	cudaFree(dev_signals);
 	cudaFree(dev_nodes);
 	cudaFree(dev_buildings);
 	cudaFree(dev_forests);
-	cudaFree(dev_gtoa);
+	cudaFree(dev_gameinfo);
 }
 
 cudaError_t allocateCudaMemory() {
@@ -336,7 +336,7 @@ cudaError_t allocateCudaMemory() {
 
 
 	// Allocate GPU buffers for three vectors (two input, one output).
-	cudaStatus = cudaMalloc((void**)&dev_gtoa, sizeof(line));
+	cudaStatus = cudaMalloc((void**)&dev_gameinfo, sizeof(info));
 	if (cudaStatus != cudaSuccess) {
 		fprintf(stderr, "cudaMalloc failed!");
 		goto Error;
@@ -385,7 +385,7 @@ cudaError_t allocateCudaMemory() {
 		fprintf(stderr, "cudaMemcpy failed!");
 		goto Error;
 	}
-	
+
 
 Error:
 	return cudaStatus;
@@ -394,21 +394,29 @@ Error:
 // Helper function for using CUDA to add vectors in parallel.
 cudaError_t signalCalcWithCuda()
 {
-	printf("signalCalcWithCuda:\n");
+	clock_t tic = clock();
 	cudaError_t cudaStatus;
 
 	long double r;
 
-	for (int i = 0; i < N; i++) {
+	int modN = N - (N%GameInfo.num_hounds);
+	int each = (N / GameInfo.num_hounds);
+	int i, j;
+	for (i = 0; i < N; i++) {
 		signal *si = &sig[i];
-		r = d2r(360.0 * i / (long double)N);
-		si->x = ga.x1;
-		si->y = ga.y1;
-		si->vx = cosl(r) * RADSCALE;
-		si->vy = sinl(r) * RADSCALE;
-		si->ss = 0;
-		si->dead = false;
-		si->eid = -1;
+		if (i < modN) {
+			r = d2r(360.0 * (j % each) / (long double)N);
+			si->x = GameInfo.gx;
+			si->y = GameInfo.gy;
+			si->vx = cosl(r) * RADSCALE;
+			si->vy = sinl(r) * RADSCALE;
+			si->ss = 0;
+			si->dead = false;
+			si->eid = -1;
+		}
+		else {
+			kill(si);
+		}
 	}
 
 	// Copy input vectors from host memory to GPU buffers.
@@ -418,14 +426,14 @@ cudaError_t signalCalcWithCuda()
 		goto Error;
 	}
 
-	cudaStatus = cudaMemcpy(dev_gtoa, &ga, sizeof(line), cudaMemcpyHostToDevice);
+	cudaStatus = cudaMemcpy(dev_gameinfo, &GameInfo, sizeof(info), cudaMemcpyHostToDevice);
 	if (cudaStatus != cudaSuccess) {
 		fprintf(stderr, "cudaMemcpy failed!");
 		goto Error;
 	}
 
 	// Launch a kernel on the GPU with one thread for each element.
-	signal_calculation << <M, N/M >> >(dev_signals, dev_nodes, dev_buildings, dev_forests, dev_gtoa);
+	signal_calculation << <M, N / M >> >(dev_signals, dev_nodes, dev_buildings, dev_forests, dev_gtoa);
 
 	// Check for any errors launching the kernel
 	cudaStatus = cudaGetLastError();
@@ -450,208 +458,75 @@ cudaError_t signalCalcWithCuda()
 	}
 
 Error:
-	return cudaStatus;
-}
-
-void display()
-{
-	int gx = ga.x1;
-	int gy = ga.y1;
-	int ax = ga.x2;
-	int ay = ga.y2;
-	int i, j, in1, in2;
-	cudaError_t cudaStatus;
-	clock_t tic = clock();
-
-	cudaStatus = signalCalcWithCuda();
-	
-	glClearColor(1, 1, 1, 0);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glLoadIdentity();
-	glOrtho(-ORTHO, ORTHO, -ORTHO, ORTHO, -ORTHO, ORTHO);
-
-	//
-
-	glColor3d(0.9, 0.7, 0.9);
-
-	//
-
-
-	glColor3d(0, 1, 0);
-	for (j = 0; j < FNUM; j++) {
-		for (i = 0; i < Forests[j].isize - 1; i++) {
-			in1 = Forests[j].inodes[i];
-			in2 = Forests[j].inodes[i + 1];
-			glBegin(GL_LINES);
-			glVertex3f(Nodes[in1].x, Nodes[in1].y, 0.0f);
-			glVertex3f(Nodes[in2].x, Nodes[in2].y, 0.0f);
-			glEnd();
-			if (point_mode) {
-				glBegin(GL_POLYGON);
-				glVertex3f(Nodes[in1].x + PNTSIZE, Nodes[in1].y - PNTSIZE, 0.0f);
-				glVertex3f(Nodes[in1].x + PNTSIZE, Nodes[in1].y + PNTSIZE, 0.0f);
-				glVertex3f(Nodes[in1].x - PNTSIZE, Nodes[in1].y + PNTSIZE, 0.0f);
-				glVertex3f(Nodes[in1].x - PNTSIZE, Nodes[in1].y - PNTSIZE, 0.0f);
-				glEnd();
-			}
-		}
-	}
-
-	glColor3d(0.5, 0.5, 0.5);
-	for (j = 0; j < BNUM; j++) {
-		for (i = 0; i < Buildings[j].isize - 1; i++) {
-			in1 = Buildings[j].inodes[i];
-			in2 = Buildings[j].inodes[i + 1];
-			glBegin(GL_LINES);
-			glVertex3f(Nodes[in1].x, Nodes[in1].y, 0.0f);
-			glVertex3f(Nodes[in2].x, Nodes[in2].y, 0.0f);
-			glEnd();
-			if (point_mode) {
-				glBegin(GL_POLYGON);
-				glVertex3f(Nodes[in1].x + PNTSIZE, Nodes[in1].y - PNTSIZE, 0.0f);
-				glVertex3f(Nodes[in1].x + PNTSIZE, Nodes[in1].y + PNTSIZE, 0.0f);
-				glVertex3f(Nodes[in1].x - PNTSIZE, Nodes[in1].y + PNTSIZE, 0.0f);
-				glVertex3f(Nodes[in1].x - PNTSIZE, Nodes[in1].y - PNTSIZE, 0.0f);
-				glEnd();
-			}
-		}
-	}
-
-	/*
-	for (int i = 0; i < N; i++) {
-	glBegin(GL_LINES);
-	glVertex3f(sig[i].x, sig[i].y, 0.0f);
-	glVertex3f(sig[i].x + sig[i].vx, sig[i].y + sig[i].vy, 0.0f);
-	glEnd();
-
-	}
-	*/
-
-	glColor3d(0, 0, 1);
-	for (int i = 0; i < N; i++) {
-		signal *si = &sig[i];
-		if (!si->dead && si->ss > 0 && si->ss < THRESHOLD) {
-			glBegin(GL_LINES);
-			glVertex3f(ax, ay, 0.0f);
-			double m = LINE_SIZE / (double)si->ss;
-			my_t tx = m*(-si->vx);
-			my_t ty = m*(-si->vy);
-			glVertex3f(ax + tx, ay + ty, 0.0f);
-			glEnd();
-		}
-	}
-
-
-	glColor3d(0, 0, 0.5);
-	glBegin(GL_POLYGON);
-	glVertex3f(ax + GSIZE, ay - GSIZE, 0.0f);
-	glVertex3f(ax + GSIZE, ay + GSIZE, 0.0f);
-	glVertex3f(ax - GSIZE, ay + GSIZE, 0.0f);
-	glVertex3f(ax - GSIZE, ay - GSIZE, 0.0f);
-	glEnd();
-
-	glColor3d(1, 0, 0);
-	glBegin(GL_POLYGON);
-	glVertex3f(gx + GSIZE, gy - GSIZE, 0.0f);
-	glVertex3f(gx + GSIZE, gy + GSIZE, 0.0f);
-	glVertex3f(gx - GSIZE, gy + GSIZE, 0.0f);
-	glVertex3f(gx - GSIZE, gy - GSIZE, 0.0f);
-	glEnd();
-
-	glFlush();
-
 	clock_t toc = clock();
 
-	printf("Calculation Elapsed: %d ms.\n", (toc - tic));
+	printf("elapsed: %d ms.\n", (toc - tic));
+	total_testing_time += toc - tic;
+	return cudaStatus;
 }
-
-void onMouseButton(int button, int state, int x, int y) {
-	y = height - y - 1;
-	my_t dx = 2 * (x - width*0.5) / width * ORTHO;
-	my_t dy = 2 * (y - height*0.5) / height * ORTHO;
-	//printf("mouse click on (%d, %d), (%I64d, %I64d)\n", x, y, dx, dy);
-
-	if (button == GLUT_LEFT_BUTTON) {
-		if (state == GLUT_DOWN) {
-			ga.x1 = dx;
-			ga.y1 = dy;
-		}
-	}
-	else if (button == GLUT_RIGHT_BUTTON) {
-		if (state == GLUT_DOWN) {
-			ga.x2 = dx;
-			ga.y2 = dy;
-		}
-	}
-
-	glutPostRedisplay();
-}
-
-void onMouseDrag(int x, int y) {
-}
-
-/*********************************************************************************
-* Call this part whenever user types keyboard.
-* This part is called in main() function by registering on glutKeyboardFunc(onKeyPress).
-**********************************************************************************/
-void onKeyPress(unsigned char key, int x, int y) {
-	if ('0' <= key && key <= '9') {
-		toggle[key - '0'] = !toggle[key - '0'];
-		for (int i = 0; i < 10; i++) {
-			//			printf("%d ", toggle[i]);
-		}
-		//		printf("\n");
-	}
-	if ((key == 'p')) { //receiver
-		point_mode = !point_mode;
-	}
-	if ((key == 'g')) { //generator
-		selection_mode = 0;
-	}
-	if ((key == 'r')) { //receiver
-		selection_mode = 1;
-	}
-	if ((key == 'd')) { //left
-		if (selection_mode == 0) {
-			ga.x1 += GSIZE;
-		}
-		else {
-			ga.x2 += GSIZE;
-		}
-	}
-	if ((key == 'a')) { //right
-		if (selection_mode == 0) {
-			ga.x1 -= GSIZE;
-		}
-		else {
-			ga.x2 -= GSIZE;
-		}
-	}
-	if ((key == 'w')) { //up
-		if (selection_mode == 0) {
-			ga.y1 += GSIZE;
-		}
-		else {
-			ga.y2 += GSIZE;
-		}
-	}
-	if ((key == 's')) { //down
-		if (selection_mode == 0) {
-			ga.y1 -= GSIZE;
-		}
-		else {
-			ga.y2 -= GSIZE;
-		}
-	}
-
-	glutPostRedisplay();
-}
-
-
 
 int main(int argc, char* argv[])
 {
 	initialize();
+
+	int num_hounds = 0;
+	double lat, lon;
+	my_t conv_x, conv_y;
+	sscanf_s(argv[0], "%lf", &lat);
+	sscanf_s(argv[1], "%lf", &lon);
+	conv_x = (my_t)(lon*1e7 - MAPX);
+	conv_y = (my_t)(lat*1e7 - MAPY);
+	GameInfo.gx = conv_x;
+	GameInfo.gy = conv_y;
+
+	sscanf_s(argv[2], "%d", &num_hounds);
+	GameInfo.num_hounds = num_hounds;
+	for (int i = 0; i < num_hounds; i++) {
+		sscanf_s(argv[3 + i * 2], "%lf", &lat);
+		sscanf_s(argv[4 + i * 2], "%lf", &lon);
+		conv_x = (my_t)(lon*1e7 - MAPX);
+		conv_y = (my_t)(lat*1e7 - MAPY);
+		GameInfo.ax[i] = conv_x;
+		GameInfo.ay[i] = conv_y;
+	}
+
+
+	/*
+	printf("Number of signals: %d\n", N);
+	ga = { 4200, 21200, 24800, 31800 };
+	printga(1);
+	signalCalcWithCuda();
+	ga = { -37800, -39600, -51800, -29400 };
+	printga(2);
+	signalCalcWithCuda();
+	ga = { -19000, 16600, -14400, 31200 };
+	printga(3);
+	signalCalcWithCuda();
+	ga = { 20600, 31600, 11400, 41400 };
+	printga(4);
+	signalCalcWithCuda();
+	ga = { 2600, 11000, 6600, 23200 };
+	printga(5);
+	signalCalcWithCuda();
+	ga = { 41000, -1000, 44600, 11600 };
+	printga(6);
+	signalCalcWithCuda();
+	ga = { 20200, 22200, 6200, 19800 };
+	printga(7);
+	signalCalcWithCuda();
+	ga = { -13800, 18000, -6600, 27000 };
+	printga(8);
+	signalCalcWithCuda();
+	ga = { 11400, 34600, -6600, 27000 };
+	printga(9);
+	signalCalcWithCuda();
+	ga = { 11400, 34600, -13200, 37200 };
+	printga(10);
+	signalCalcWithCuda();
+	printf("* Total testing time: %d ms, average time: %d ms.\n", total_testing_time, total_testing_time / 10);
+	*/
+	
+	/*
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGBA | GLUT_DEPTH);
 	glutInitWindowSize(width, height);
@@ -662,6 +537,8 @@ int main(int argc, char* argv[])
 
 	glutKeyboardFunc(onKeyPress);
 	glutMainLoop();
+	*/
+
 	clean_up();
 
 	return 0;
@@ -687,6 +564,8 @@ void load_file() {
 	int ti;
 	int tokidx;
 	my_t mxx, mxy, mix, miy;
+
+	int i, ni, maxr;
 
 	fopen_s(&fp, "MapData.txt", "rt");
 	if (fp != NULL)
@@ -718,8 +597,8 @@ void load_file() {
 
 				//Buildings[bidx].inodes = (int*)malloc(sizeof(int)*count);
 				Buildings[bidx].isize = count;
-				mxx = mxy = -99999;
-				mix = miy = 99999;
+				mxx = mxy = -999999999;
+				mix = miy = 999999999;
 
 				token = strtok_s(pstr, del, &context);
 				tokidx = 0;
@@ -749,6 +628,18 @@ void load_file() {
 				Buildings[bidx].y = (mxy + miy) / 2;
 				Buildings[bidx].radius = sqrt((mxx - mix)*(mxx - mix) + (mxy - miy)*(mxy - miy)) / 2;
 
+				/*
+				Buildings[bidx].radius = 0;
+				for (i = 0; i < Buildings[bidx].isize; i++) {
+					ni = Buildings[bidx].inodes[i];
+					maxr = (int)sqrt((Nodes[ni].x - Buildings[bidx].x)*(Nodes[ni].x - Buildings[bidx].x)
+						+ (Nodes[ni].y - Buildings[fidx].y)*(Nodes[ni].y - Buildings[bidx].x)) + 1;
+					if (Buildings[bidx].radius < maxr) {
+						Buildings[bidx].radius = maxr;
+					}
+				}
+				*/
+				
 				bidx++;
 			}
 			if (pstr[0] == 'f') {
@@ -759,8 +650,8 @@ void load_file() {
 
 				//Forests[fidx].inodes = (int*)malloc(sizeof(int)*count);
 				Forests[fidx].isize = count;
-				mxx = mxy = -99999;
-				mix = miy = 99999;
+				mxx = mxy = -999999999;
+				mix = miy = 999999999;
 
 				token = strtok_s(pstr, del, &context);
 				tokidx = 0;
@@ -789,7 +680,19 @@ void load_file() {
 				Forests[fidx].x = (mxx + mix) / 2;
 				Forests[fidx].y = (mxy + miy) / 2;
 				Forests[fidx].radius = sqrt((mxx - mix)*(mxx - mix) + (mxy - miy)*(mxy - miy)) / 2;
-
+				
+				/*
+				Forests[fidx].radius = 0;
+				for (i = 0; i < Forests[fidx].isize; i++) {
+					ni = Forests[fidx].inodes[i];
+					maxr = (int)sqrt((Nodes[ni].x - Forests[fidx].x)*(Nodes[ni].x - Forests[fidx].x)
+						+ (Nodes[ni].y - Forests[fidx].y)*(Nodes[ni].y - Forests[fidx].x)) + 1;
+					if (Forests[fidx].radius < maxr) {
+						Forests[fidx].radius = maxr;
+					}
+				}
+				*/
+				
 				fidx++;
 			}
 		}
