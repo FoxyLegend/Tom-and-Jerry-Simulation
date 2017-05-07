@@ -39,7 +39,7 @@ int nnum, bnum, fnum;
 int point_mode = 0;
 
 int width = 800, height = 800;
-signal sig[N], compass[10][32];
+signal sig[N];
 int selection_mode = 0; //generator: 0, detector: 1
 
 clock_t total_testing_time = 0;
@@ -47,14 +47,10 @@ clock_t total_testing_time = 0;
 node *Nodes;
 polygon *Buildings;
 polygon *Forests;
-info GameInfo;
 
-
-////////////////// cuda time
-signal *dev_signals;
-node *dev_nodes;
-polygon *dev_buildings, *dev_forests;
-info *dev_gameinfo;
+line ga = {
+	ga.x1 = -21800, ga.y1 = 13200, ga.x2 = -7000, ga.y2 = -8000
+};
 
 int toggle[10];
 
@@ -315,13 +311,18 @@ __global__ void signal_calculation(signal *signal_list,
 	}
 }
 
+////////////////// cuda time
+signal *dev_signals;
+node *dev_nodes;
+polygon *dev_buildings, *dev_forests;
+line *dev_gtoa;
 
 void freeCudaMemory() {
 	cudaFree(dev_signals);
 	cudaFree(dev_nodes);
 	cudaFree(dev_buildings);
 	cudaFree(dev_forests);
-	cudaFree(dev_gameinfo);
+	cudaFree(dev_gtoa);
 }
 
 cudaError_t allocateCudaMemory() {
@@ -336,7 +337,7 @@ cudaError_t allocateCudaMemory() {
 
 
 	// Allocate GPU buffers for three vectors (two input, one output).
-	cudaStatus = cudaMalloc((void**)&dev_gameinfo, sizeof(info));
+	cudaStatus = cudaMalloc((void**)&dev_gtoa, sizeof(line));
 	if (cudaStatus != cudaSuccess) {
 		fprintf(stderr, "cudaMalloc failed!");
 		goto Error;
@@ -399,24 +400,16 @@ cudaError_t signalCalcWithCuda()
 
 	long double r;
 
-	int modN = N - (N%GameInfo.num_hounds);
-	int each = (N / GameInfo.num_hounds);
-	int i, j;
-	for (i = 0; i < N; i++) {
+	for (int i = 0; i < N; i++) {
 		signal *si = &sig[i];
-		if (i < modN) {
-			r = d2r(360.0 * (j % each) / (long double)N);
-			si->x = GameInfo.gx;
-			si->y = GameInfo.gy;
-			si->vx = cosl(r) * RADSCALE;
-			si->vy = sinl(r) * RADSCALE;
-			si->ss = 0;
-			si->dead = false;
-			si->eid = -1;
-		}
-		else {
-			kill(si);
-		}
+		r = d2r(360.0 * i / (long double)N);
+		si->x = ga.x1;
+		si->y = ga.y1;
+		si->vx = cosl(r) * RADSCALE;
+		si->vy = sinl(r) * RADSCALE;
+		si->ss = 0;
+		si->dead = false;
+		si->eid = -1;
 	}
 
 	// Copy input vectors from host memory to GPU buffers.
@@ -426,7 +419,7 @@ cudaError_t signalCalcWithCuda()
 		goto Error;
 	}
 
-	cudaStatus = cudaMemcpy(dev_gameinfo, &GameInfo, sizeof(info), cudaMemcpyHostToDevice);
+	cudaStatus = cudaMemcpy(dev_gtoa, &ga, sizeof(line), cudaMemcpyHostToDevice);
 	if (cudaStatus != cudaSuccess) {
 		fprintf(stderr, "cudaMemcpy failed!");
 		goto Error;
@@ -465,33 +458,205 @@ Error:
 	return cudaStatus;
 }
 
+void display()
+{
+	int gx = ga.x1;
+	int gy = ga.y1;
+	int ax = ga.x2;
+	int ay = ga.y2;
+	int i, j, in1, in2;
+	cudaError_t cudaStatus;
+
+	cudaStatus = signalCalcWithCuda();
+
+	glClearColor(1, 1, 1, 0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glLoadIdentity();
+	glOrtho(-ORTHO, ORTHO, -ORTHO, ORTHO, -ORTHO, ORTHO);
+
+	//
+
+	glColor3d(0.9, 0.7, 0.9);
+
+	//
+
+
+	glColor3d(0, 1, 0);
+	for (j = 0; j < FNUM; j++) {
+		for (i = 0; i < Forests[j].isize - 1; i++) {
+			in1 = Forests[j].inodes[i];
+			in2 = Forests[j].inodes[i + 1];
+			glBegin(GL_LINES);
+			glVertex3f(Nodes[in1].x, Nodes[in1].y, 0.0f);
+			glVertex3f(Nodes[in2].x, Nodes[in2].y, 0.0f);
+			glEnd();
+			if (point_mode) {
+				glBegin(GL_POLYGON);
+				glVertex3f(Nodes[in1].x + PNTSIZE, Nodes[in1].y - PNTSIZE, 0.0f);
+				glVertex3f(Nodes[in1].x + PNTSIZE, Nodes[in1].y + PNTSIZE, 0.0f);
+				glVertex3f(Nodes[in1].x - PNTSIZE, Nodes[in1].y + PNTSIZE, 0.0f);
+				glVertex3f(Nodes[in1].x - PNTSIZE, Nodes[in1].y - PNTSIZE, 0.0f);
+				glEnd();
+			}
+		}
+	}
+
+	glColor3d(0.5, 0.5, 0.5);
+	for (j = 0; j < BNUM; j++) {
+		for (i = 0; i < Buildings[j].isize - 1; i++) {
+			in1 = Buildings[j].inodes[i];
+			in2 = Buildings[j].inodes[i + 1];
+			glBegin(GL_LINES);
+			glVertex3f(Nodes[in1].x, Nodes[in1].y, 0.0f);
+			glVertex3f(Nodes[in2].x, Nodes[in2].y, 0.0f);
+			glEnd();
+			if (point_mode) {
+				glBegin(GL_POLYGON);
+				glVertex3f(Nodes[in1].x + PNTSIZE, Nodes[in1].y - PNTSIZE, 0.0f);
+				glVertex3f(Nodes[in1].x + PNTSIZE, Nodes[in1].y + PNTSIZE, 0.0f);
+				glVertex3f(Nodes[in1].x - PNTSIZE, Nodes[in1].y + PNTSIZE, 0.0f);
+				glVertex3f(Nodes[in1].x - PNTSIZE, Nodes[in1].y - PNTSIZE, 0.0f);
+				glEnd();
+			}
+		}
+	}
+
+	/*
+	for (int i = 0; i < N; i++) {
+	glBegin(GL_LINES);
+	glVertex3f(sig[i].x, sig[i].y, 0.0f);
+	glVertex3f(sig[i].x + sig[i].vx, sig[i].y + sig[i].vy, 0.0f);
+	glEnd();
+	}
+	*/
+
+	glColor3d(0, 0, 1);
+	for (int i = 0; i < N; i++) {
+		signal *si = &sig[i];
+		if (!si->dead && si->ss > 0 && si->ss < THRESHOLD) {
+			glBegin(GL_LINES);
+			glVertex3f(ax, ay, 0.0f);
+			double m = LINE_SIZE / (double)si->ss;
+			my_t tx = m*(-si->vx);
+			my_t ty = m*(-si->vy);
+			glVertex3f(ax + tx, ay + ty, 0.0f);
+			glEnd();
+		}
+	}
+
+
+	glColor3d(0, 0, 0.5);
+	glBegin(GL_POLYGON);
+	glVertex3f(ax + GSIZE, ay - GSIZE, 0.0f);
+	glVertex3f(ax + GSIZE, ay + GSIZE, 0.0f);
+	glVertex3f(ax - GSIZE, ay + GSIZE, 0.0f);
+	glVertex3f(ax - GSIZE, ay - GSIZE, 0.0f);
+	glEnd();
+
+	glColor3d(1, 0, 0);
+	glBegin(GL_POLYGON);
+	glVertex3f(gx + GSIZE, gy - GSIZE, 0.0f);
+	glVertex3f(gx + GSIZE, gy + GSIZE, 0.0f);
+	glVertex3f(gx - GSIZE, gy + GSIZE, 0.0f);
+	glVertex3f(gx - GSIZE, gy - GSIZE, 0.0f);
+	glEnd();
+
+	glFlush();
+
+}
+
+void onMouseButton(int button, int state, int x, int y) {
+	y = height - y - 1;
+	my_t dx = 2 * (x - width*0.5) / width * ORTHO;
+	my_t dy = 2 * (y - height*0.5) / height * ORTHO;
+	//printf("mouse click on (%d, %d), (%I64d, %I64d)\n", x, y, dx, dy);
+
+	if (button == GLUT_LEFT_BUTTON) {
+		if (state == GLUT_DOWN) {
+			ga.x1 = dx;
+			ga.y1 = dy;
+		}
+	}
+	else if (button == GLUT_RIGHT_BUTTON) {
+		if (state == GLUT_DOWN) {
+			ga.x2 = dx;
+			ga.y2 = dy;
+		}
+	}
+
+	glutPostRedisplay();
+}
+
+void onMouseDrag(int x, int y) {
+}
+
+/*********************************************************************************
+* Call this part whenever user types keyboard.
+* This part is called in main() function by registering on glutKeyboardFunc(onKeyPress).
+**********************************************************************************/
+void onKeyPress(unsigned char key, int x, int y) {
+	if ('0' <= key && key <= '9') {
+		toggle[key - '0'] = !toggle[key - '0'];
+		for (int i = 0; i < 10; i++) {
+			//			printf("%d ", toggle[i]);
+		}
+		//		printf("\n");
+	}
+	if ((key == 'p')) { //receiver
+		point_mode = !point_mode;
+	}
+	if ((key == 'g')) { //generator
+		selection_mode = 0;
+	}
+	if ((key == 'r')) { //receiver
+		selection_mode = 1;
+	}
+	if ((key == 'd')) { //left
+		if (selection_mode == 0) {
+			ga.x1 += GSIZE;
+		}
+		else {
+			ga.x2 += GSIZE;
+		}
+	}
+	if ((key == 'a')) { //right
+		if (selection_mode == 0) {
+			ga.x1 -= GSIZE;
+		}
+		else {
+			ga.x2 -= GSIZE;
+		}
+	}
+	if ((key == 'w')) { //up
+		if (selection_mode == 0) {
+			ga.y1 += GSIZE;
+		}
+		else {
+			ga.y2 += GSIZE;
+		}
+	}
+	if ((key == 's')) { //down
+		if (selection_mode == 0) {
+			ga.y1 -= GSIZE;
+		}
+		else {
+			ga.y2 -= GSIZE;
+		}
+	}
+
+	glutPostRedisplay();
+}
+
+
+
+void printga(int testnum) {
+	printf("* Test %d (%lld, %lld, %lld, %lld) : ", testnum, MAPX + ga.x1, MAPY + ga.y1, MAPX + ga.x2, MAPY + ga.y2);
+}
+
 int main(int argc, char* argv[])
 {
 	initialize();
 
-	int num_hounds = 0;
-	double lat, lon;
-	my_t conv_x, conv_y;
-	sscanf_s(argv[0], "%lf", &lat);
-	sscanf_s(argv[1], "%lf", &lon);
-	conv_x = (my_t)(lon*1e7 - MAPX);
-	conv_y = (my_t)(lat*1e7 - MAPY);
-	GameInfo.gx = conv_x;
-	GameInfo.gy = conv_y;
-
-	sscanf_s(argv[2], "%d", &num_hounds);
-	GameInfo.num_hounds = num_hounds;
-	for (int i = 0; i < num_hounds; i++) {
-		sscanf_s(argv[3 + i * 2], "%lf", &lat);
-		sscanf_s(argv[4 + i * 2], "%lf", &lon);
-		conv_x = (my_t)(lon*1e7 - MAPX);
-		conv_y = (my_t)(lat*1e7 - MAPY);
-		GameInfo.ax[i] = conv_x;
-		GameInfo.ay[i] = conv_y;
-	}
-
-
-	/*
 	printf("Number of signals: %d\n", N);
 	ga = { 4200, 21200, 24800, 31800 };
 	printga(1);
@@ -524,9 +689,7 @@ int main(int argc, char* argv[])
 	printga(10);
 	signalCalcWithCuda();
 	printf("* Total testing time: %d ms, average time: %d ms.\n", total_testing_time, total_testing_time / 10);
-	*/
-	
-	/*
+
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGBA | GLUT_DEPTH);
 	glutInitWindowSize(width, height);
@@ -537,8 +700,6 @@ int main(int argc, char* argv[])
 
 	glutKeyboardFunc(onKeyPress);
 	glutMainLoop();
-	*/
-
 	clean_up();
 
 	return 0;
@@ -597,8 +758,8 @@ void load_file() {
 
 				//Buildings[bidx].inodes = (int*)malloc(sizeof(int)*count);
 				Buildings[bidx].isize = count;
-				mxx = mxy = -999999999;
-				mix = miy = 999999999;
+				mxx = mxy = -99999;
+				mix = miy = 99999;
 
 				token = strtok_s(pstr, del, &context);
 				tokidx = 0;
@@ -631,15 +792,15 @@ void load_file() {
 				/*
 				Buildings[bidx].radius = 0;
 				for (i = 0; i < Buildings[bidx].isize; i++) {
-					ni = Buildings[bidx].inodes[i];
-					maxr = (int)sqrt((Nodes[ni].x - Buildings[bidx].x)*(Nodes[ni].x - Buildings[bidx].x)
-						+ (Nodes[ni].y - Buildings[fidx].y)*(Nodes[ni].y - Buildings[bidx].x)) + 1;
-					if (Buildings[bidx].radius < maxr) {
-						Buildings[bidx].radius = maxr;
-					}
+				ni = Buildings[bidx].inodes[i];
+				maxr = (int)sqrt((Nodes[ni].x - Buildings[bidx].x)*(Nodes[ni].x - Buildings[bidx].x)
+				+ (Nodes[ni].y - Buildings[fidx].y)*(Nodes[ni].y - Buildings[bidx].x)) + 1;
+				if (Buildings[bidx].radius < maxr) {
+				Buildings[bidx].radius = maxr;
+				}
 				}
 				*/
-				
+
 				bidx++;
 			}
 			if (pstr[0] == 'f') {
@@ -650,8 +811,8 @@ void load_file() {
 
 				//Forests[fidx].inodes = (int*)malloc(sizeof(int)*count);
 				Forests[fidx].isize = count;
-				mxx = mxy = -999999999;
-				mix = miy = 999999999;
+				mxx = mxy = -99999;
+				mix = miy = 99999;
 
 				token = strtok_s(pstr, del, &context);
 				tokidx = 0;
@@ -680,19 +841,19 @@ void load_file() {
 				Forests[fidx].x = (mxx + mix) / 2;
 				Forests[fidx].y = (mxy + miy) / 2;
 				Forests[fidx].radius = sqrt((mxx - mix)*(mxx - mix) + (mxy - miy)*(mxy - miy)) / 2;
-				
+
 				/*
 				Forests[fidx].radius = 0;
 				for (i = 0; i < Forests[fidx].isize; i++) {
-					ni = Forests[fidx].inodes[i];
-					maxr = (int)sqrt((Nodes[ni].x - Forests[fidx].x)*(Nodes[ni].x - Forests[fidx].x)
-						+ (Nodes[ni].y - Forests[fidx].y)*(Nodes[ni].y - Forests[fidx].x)) + 1;
-					if (Forests[fidx].radius < maxr) {
-						Forests[fidx].radius = maxr;
-					}
+				ni = Forests[fidx].inodes[i];
+				maxr = (int)sqrt((Nodes[ni].x - Forests[fidx].x)*(Nodes[ni].x - Forests[fidx].x)
+				+ (Nodes[ni].y - Forests[fidx].y)*(Nodes[ni].y - Forests[fidx].x)) + 1;
+				if (Forests[fidx].radius < maxr) {
+				Forests[fidx].radius = maxr;
+				}
 				}
 				*/
-				
+
 				fidx++;
 			}
 		}
