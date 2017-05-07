@@ -32,10 +32,4 @@ typedef struct {
 	my_t x, y, radius;
 } polygon;
 
-typedef struct {
-	my_t gx, gy;
-	my_t ax[10], ay[10];
-	int num_hounds;
-} info;
-
 #endif
