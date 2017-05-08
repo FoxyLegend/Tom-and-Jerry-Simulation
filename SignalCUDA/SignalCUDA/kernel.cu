@@ -12,7 +12,7 @@
 
 #include <time.h>
 
-#define N 172032 //131072
+#define N 72032 //131072
 #define M 672
 #define THRESHOLD 100000
 #define GSIZE 1000

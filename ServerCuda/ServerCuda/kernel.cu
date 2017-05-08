@@ -22,6 +22,7 @@
 #define RADIUS 1500
 #define RADSCALE 1000000000
 #define LINE_SIZE 0.3
+#define NCOMPASS 36
 
 #define d2r(deg) (deg * PI / 180.0)
 #define kill(s) (s->dead = true)
@@ -37,12 +38,12 @@
 
 int nnum, bnum, fnum;
 int point_mode = 0;
+int num_hounds;
 
 int width = 800, height = 800;
-signal sig[N], compass[10][32];
+signal sig[N];
+double compass[10][NCOMPASS];
 int selection_mode = 0; //generator: 0, detector: 1
-
-clock_t total_testing_time = 0;
 
 node *Nodes;
 polygon *Buildings;
@@ -54,7 +55,7 @@ info GameInfo;
 signal *dev_signals;
 node *dev_nodes;
 polygon *dev_buildings, *dev_forests;
-info *dev_gameinfo;
+info *dev_info;
 
 int toggle[10];
 
@@ -63,13 +64,15 @@ void clean_up();
 void initialize();
 
 __global__ void signal_calculation(signal *signal_list,
-	const node *node_list, const polygon *building_list, const polygon *forest_list, const line *gtoa) {
-	my_t gx = gtoa->x1;
-	my_t gy = gtoa->y1;
-	my_t ax = gtoa->x2;
-	my_t ay = gtoa->y2;
-	my_t zx, zy;
+	const node *node_list, const polygon *building_list, const polygon *forest_list, const info *dev_info) {
 	int i = threadIdx.x + (blockIdx.x * blockDim.x);
+	my_t gx = dev_info->gx;
+	my_t gy = dev_info->gy;
+	my_t ax = dev_info->ax[i / (N / dev_info->num_hounds)];
+	my_t ay = dev_info->ay[i / (N / dev_info->num_hounds)];
+	if(i % 10000 == 0)
+		printf("gx = %lld, gy = %lld, ax = %lld, ay = %lld\n", gx, gy, ax, ay);
+	my_t zx, zy;
 
 	my_t px, py, test, tdist = 0, kdist = 0;
 	signal sigref, sigblk;
@@ -229,8 +232,7 @@ __global__ void signal_calculation(signal *signal_list,
 							zx = (si->x - px);
 							zy = (si->y - py);
 							kdist = zx*zx + zy*zy;
-							if (!sigblk.dead || sigblk.ss > kdist) { //if marked as alive
-																	 //printf("kdist = %lld\n", kdist);
+							if (!sigblk.dead || sigblk.ss > kdist) {
 								sigblk.x = px;
 								sigblk.y = py;
 								sigblk.ss = kdist;
@@ -242,25 +244,7 @@ __global__ void signal_calculation(signal *signal_list,
 			}
 		}
 
-		/*
-		if (sigblk.dead) {
-		if (possible && tdist < sigblk.ss) {
-		printf("possible!\n");
-		printf("tdist = %lld ", tdist);
-		printf("sigblk.ss = %lld\n", sigblk.ss);
-		si->ss += sqrt((float)tdist);
-		break;
-		}
-		kill(si);
-		break;
-		}
-		if (possible) {
-		si->ss += sqrt((float)tdist);
-		break;
-		}
-		kill(si);
-		break;
-		*/
+
 		if (!sigref.dead) {
 			if (sigblk.dead) {
 				if (possible && tdist < sigref.ss && tdist < sigblk.ss) {
@@ -321,7 +305,7 @@ void freeCudaMemory() {
 	cudaFree(dev_nodes);
 	cudaFree(dev_buildings);
 	cudaFree(dev_forests);
-	cudaFree(dev_gameinfo);
+	cudaFree(dev_info);
 }
 
 cudaError_t allocateCudaMemory() {
@@ -336,7 +320,7 @@ cudaError_t allocateCudaMemory() {
 
 
 	// Allocate GPU buffers for three vectors (two input, one output).
-	cudaStatus = cudaMalloc((void**)&dev_gameinfo, sizeof(info));
+	cudaStatus = cudaMalloc((void**)&dev_info, sizeof(info));
 	if (cudaStatus != cudaSuccess) {
 		fprintf(stderr, "cudaMalloc failed!");
 		goto Error;
@@ -394,18 +378,17 @@ Error:
 // Helper function for using CUDA to add vectors in parallel.
 cudaError_t signalCalcWithCuda()
 {
-	clock_t tic = clock();
 	cudaError_t cudaStatus;
 
 	long double r;
 
 	int modN = N - (N%GameInfo.num_hounds);
-	int each = (N / GameInfo.num_hounds);
-	int i, j;
+	int eachN = (N / GameInfo.num_hounds);
+	int i;
 	for (i = 0; i < N; i++) {
 		signal *si = &sig[i];
 		if (i < modN) {
-			r = d2r(360.0 * (j % each) / (long double)N);
+			r = d2r(360.0 * (i % eachN) / (long double)eachN);
 			si->x = GameInfo.gx;
 			si->y = GameInfo.gy;
 			si->vx = cosl(r) * RADSCALE;
@@ -426,14 +409,14 @@ cudaError_t signalCalcWithCuda()
 		goto Error;
 	}
 
-	cudaStatus = cudaMemcpy(dev_gameinfo, &GameInfo, sizeof(info), cudaMemcpyHostToDevice);
+	cudaStatus = cudaMemcpy(dev_info, &GameInfo, sizeof(info), cudaMemcpyHostToDevice);
 	if (cudaStatus != cudaSuccess) {
 		fprintf(stderr, "cudaMemcpy failed!");
 		goto Error;
 	}
 
 	// Launch a kernel on the GPU with one thread for each element.
-	signal_calculation << <M, N / M >> >(dev_signals, dev_nodes, dev_buildings, dev_forests, dev_gtoa);
+	signal_calculation << <M, N / M >> >(dev_signals, dev_nodes, dev_buildings, dev_forests, dev_info);
 
 	// Check for any errors launching the kernel
 	cudaStatus = cudaGetLastError();
@@ -458,74 +441,82 @@ cudaError_t signalCalcWithCuda()
 	}
 
 Error:
-	clock_t toc = clock();
-
-	printf("elapsed: %d ms.\n", (toc - tic));
-	total_testing_time += toc - tic;
 	return cudaStatus;
+}
+
+void convertToCompass() {
+	int i, j, hidx, sidx;
+	double sum;
+
+	for (i = 0; i < num_hounds; i++) {
+		for (j = 0; j < NCOMPASS; j++) {
+			compass[i][j] = 0.0;
+		}
+	}
+
+	int rN = N - (N % num_hounds);
+	int eachN = rN / num_hounds;
+	int sn = eachN / NCOMPASS;
+	for (i = 0; i < rN; i++) {
+		hidx = i / eachN;
+		sidx = (i % eachN) / (eachN / NCOMPASS);
+		
+		if (!sig[i].dead) {
+			printf("compass[%d][%d] += %lld\n", hidx, sidx, sig[i].ss);
+		}
+
+		if (!sig[i].dead) {
+			compass[hidx][sidx] += sig[i].ss;
+		}
+		//compass[hidx]
+	}
 }
 
 int main(int argc, char* argv[])
 {
+	if (argc == 1) return 0;
 	initialize();
 
-	int num_hounds = 0;
-	double lat, lon;
-	my_t conv_x, conv_y;
-	sscanf_s(argv[0], "%lf", &lat);
-	sscanf_s(argv[1], "%lf", &lon);
-	conv_x = (my_t)(lon*1e7 - MAPX);
-	conv_y = (my_t)(lat*1e7 - MAPY);
-	GameInfo.gx = conv_x;
-	GameInfo.gy = conv_y;
+	int i, j;
+	my_t lat, lon;
+	lon = atoll(argv[1]);
+	lat = atoll(argv[2]);
+	printf("lon = %lld, lat = %lld\n", lon, lat);
 
-	sscanf_s(argv[2], "%d", &num_hounds);
+	GameInfo.gx = lon - (my_t)MAPX;
+	GameInfo.gy = lat - (my_t)MAPY;
+
+	printf("conv = %lld, convy = %lld\n", GameInfo.gx, GameInfo.gy);
+
+	printf("mapx = %d, mapy = %d\n", MAPX, MAPY);
+	sscanf_s(argv[3], "%d", &num_hounds);
 	GameInfo.num_hounds = num_hounds;
-	for (int i = 0; i < num_hounds; i++) {
-		sscanf_s(argv[3 + i * 2], "%lf", &lat);
-		sscanf_s(argv[4 + i * 2], "%lf", &lon);
-		conv_x = (my_t)(lon*1e7 - MAPX);
-		conv_y = (my_t)(lat*1e7 - MAPY);
-		GameInfo.ax[i] = conv_x;
-		GameInfo.ay[i] = conv_y;
+	for (i = 0; i < num_hounds; i++) {
+		lon = atoll(argv[4 + i*2]);
+		lat = atoll(argv[5 + i*2]);
+		GameInfo.ax[i] = lon - (my_t)MAPX;
+		GameInfo.ay[i] = lat - (my_t)MAPY;
+		printf("conv = %lld, convy = %lld\n", GameInfo.ax[i], GameInfo.ay[i]);
+		printf("lon = %lld, MAPX = %lld, lon - MAPX = %lld\n", lon, MAPX, lon - MAPX);
+		printf("MAPX = %lld\n", MAPX);
+		printf("MAPX = %d\n", MAPX);
 	}
 
+	signalCalcWithCuda();
+	
+	convertToCompass();
 
-	/*
-	printf("Number of signals: %d\n", N);
-	ga = { 4200, 21200, 24800, 31800 };
-	printga(1);
-	signalCalcWithCuda();
-	ga = { -37800, -39600, -51800, -29400 };
-	printga(2);
-	signalCalcWithCuda();
-	ga = { -19000, 16600, -14400, 31200 };
-	printga(3);
-	signalCalcWithCuda();
-	ga = { 20600, 31600, 11400, 41400 };
-	printga(4);
-	signalCalcWithCuda();
-	ga = { 2600, 11000, 6600, 23200 };
-	printga(5);
-	signalCalcWithCuda();
-	ga = { 41000, -1000, 44600, 11600 };
-	printga(6);
-	signalCalcWithCuda();
-	ga = { 20200, 22200, 6200, 19800 };
-	printga(7);
-	signalCalcWithCuda();
-	ga = { -13800, 18000, -6600, 27000 };
-	printga(8);
-	signalCalcWithCuda();
-	ga = { 11400, 34600, -6600, 27000 };
-	printga(9);
-	signalCalcWithCuda();
-	ga = { 11400, 34600, -13200, 37200 };
-	printga(10);
-	signalCalcWithCuda();
-	printf("* Total testing time: %d ms, average time: %d ms.\n", total_testing_time, total_testing_time / 10);
-	*/
-
+	for (j = 0; j < num_hounds; j++) {
+		for (i = 0; i < NCOMPASS; i++) {
+			if (i == NCOMPASS - 1) {
+				fprintf(stdout, "%5.3f", compass[j][i]);
+			}
+			else {
+				fprintf(stdout, "%5.3f ", compass[j][i]);
+			}
+		}
+		fprintf(stdout, "\n");
+	}
 	/*
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGBA | GLUT_DEPTH);
@@ -537,10 +528,9 @@ int main(int argc, char* argv[])
 
 	glutKeyboardFunc(onKeyPress);
 	glutMainLoop();
+
 	*/
-
 	clean_up();
-
 	return 0;
 }
 
@@ -573,7 +563,6 @@ void load_file() {
 		nidx = bidx = fidx = 0;
 		fscanf_s(fp, "i\t%d\t%d\t%d\n", &nnum, &bnum, &fnum);
 		//deprecated dynamic allocation
-		//printf("%d, %d, %d\n", nnum, bnum, fnum);
 		Nodes = (node*)malloc(sizeof(node)*NNUM);
 		Buildings = (polygon*)malloc(sizeof(polygon)*BNUM);
 		Forests = (polygon*)malloc(sizeof(polygon)*FNUM);
@@ -581,6 +570,7 @@ void load_file() {
 		while (!feof(fp))
 		{
 			pstr = fgets(stmp, sizeof(stmp), fp);
+
 			if (pstr == NULL) break;
 			if (pstr[0] == 'n') {
 				double lat, lon;
@@ -701,21 +691,26 @@ void load_file() {
 	else
 	{
 		//file not exist
+		fprintf(stderr, "File not found!\n");
 	}
 }
 
 void clean_up() {
 	int i;
 	free(Nodes);
+	/*
 	for (i = 0; i < BNUM; i++) {
 		if (Buildings[i].inodes != NULL)
 			free(Buildings[i].inodes);
 	}
+	*/
 	free(Buildings);
+	/*
 	for (i = 0; i < FNUM; i++) {
 		if (Forests[i].inodes != NULL)
 			free(Forests[i].inodes);
 	}
+	*/
 	free(Forests);
 
 	freeCudaMemory();

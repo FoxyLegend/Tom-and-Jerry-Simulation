@@ -15,13 +15,6 @@ typedef struct {
 } signal;
 
 typedef struct {
-	my_t x1;
-	my_t y1;
-	my_t x2;
-	my_t y2;
-} line;
-
-typedef struct {
 	my_t x;
 	my_t y;
 } node;
