@@ -67,6 +67,25 @@ Implementation of virtual gears required for the sport called the Foxhunt game w
 
 [![Signal reflection](https://img.youtube.com/vi/2uKSR1LshKs/0.jpg)](https://www.youtube.com/watch?v=2uKSR1LshKs "Signal reflection")
 
+[![Signal Simulation Web Socket](https://img.youtube.com/vi/h7f6DAYvjwM/0.jpg)](https://www.youtube.com/watch?v=h7f6DAYvjwM "Signal Simulation Web Socket")
+
+### Online realtime signal simulation prototyping
+We used node.js and socket.io. (see WebGraphic and SeqProgram for this)
+
+```javascript
+function runCalculation(){
+	var prog = "SeqProgram.exe " + position.gx + " " + position.gy + " " + position.ax + " " + position.ay;
+	exec(prog, (err, stdout, stderr) => {
+		if (err) {
+			console.error(err);
+			return;
+		}
+		signal = JSON.parse(stdout);
+	});
+}
+runCalculation(); //initalize
+```
+
 ### [Open MPI](https://www.open-mpi.org/)
 Our first proposal included MPI technology, but now we only consider to use only GPU because it's enough.
 
