@@ -70,8 +70,8 @@ __global__ void signal_calculation(signal *signal_list,
 	my_t gy = dev_info->gy;
 	my_t ax = dev_info->ax[i / (N / dev_info->num_hounds)];
 	my_t ay = dev_info->ay[i / (N / dev_info->num_hounds)];
-	if(i % 10000 == 0)
-		printf("gx = %lld, gy = %lld, ax = %lld, ay = %lld\n", gx, gy, ax, ay);
+	//if(i % 10000 == 0)
+	//	printf("gx = %lld, gy = %lld, ax = %lld, ay = %lld\n", gx, gy, ax, ay);
 	my_t zx, zy;
 
 	my_t px, py, test, tdist = 0, kdist = 0;
@@ -462,11 +462,11 @@ void convertToCompass() {
 		sidx = (i % eachN) / (eachN / NCOMPASS);
 		
 		if (!sig[i].dead) {
-			printf("compass[%d][%d] += %lld\n", hidx, sidx, sig[i].ss);
+			//printf("compass[%d][%d] += %lld\n", hidx, sidx, sig[i].ss);
 		}
 
 		if (!sig[i].dead) {
-			compass[hidx][sidx] += sig[i].ss;
+			compass[hidx][sidx] += 100000 / sig[i].ss;
 		}
 		//compass[hidx]
 	}
@@ -481,25 +481,17 @@ int main(int argc, char* argv[])
 	my_t lat, lon;
 	lon = atoll(argv[1]);
 	lat = atoll(argv[2]);
-	printf("lon = %lld, lat = %lld\n", lon, lat);
-
+	
 	GameInfo.gx = lon - (my_t)MAPX;
 	GameInfo.gy = lat - (my_t)MAPY;
 
-	printf("conv = %lld, convy = %lld\n", GameInfo.gx, GameInfo.gy);
-
-	printf("mapx = %d, mapy = %d\n", MAPX, MAPY);
 	sscanf_s(argv[3], "%d", &num_hounds);
 	GameInfo.num_hounds = num_hounds;
 	for (i = 0; i < num_hounds; i++) {
 		lon = atoll(argv[4 + i*2]);
 		lat = atoll(argv[5 + i*2]);
 		GameInfo.ax[i] = lon - (my_t)MAPX;
-		GameInfo.ay[i] = lat - (my_t)MAPY;
-		printf("conv = %lld, convy = %lld\n", GameInfo.ax[i], GameInfo.ay[i]);
-		printf("lon = %lld, MAPX = %lld, lon - MAPX = %lld\n", lon, MAPX, lon - MAPX);
-		printf("MAPX = %lld\n", MAPX);
-		printf("MAPX = %d\n", MAPX);
+		GameInfo.ay[i] = lat - (my_t)MAPY;	
 	}
 
 	signalCalcWithCuda();
@@ -509,10 +501,10 @@ int main(int argc, char* argv[])
 	for (j = 0; j < num_hounds; j++) {
 		for (i = 0; i < NCOMPASS; i++) {
 			if (i == NCOMPASS - 1) {
-				fprintf(stdout, "%5.3f", compass[j][i]);
+				fprintf(stdout, "%5.0f", compass[j][i]);
 			}
 			else {
-				fprintf(stdout, "%5.3f ", compass[j][i]);
+				fprintf(stdout, "%5.0f ", compass[j][i]);
 			}
 		}
 		fprintf(stdout, "\n");

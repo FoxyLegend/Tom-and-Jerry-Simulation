@@ -12,7 +12,7 @@
 
 #include <time.h>
 
-#define N 72032 //131072
+#define N 172032 //131072
 #define M 672
 #define THRESHOLD 100000
 #define GSIZE 1000
@@ -567,24 +567,27 @@ void display()
 
 void onMouseButton(int button, int state, int x, int y) {
 	y = height - y - 1;
-	my_t dx = 2 * (x - width*0.5) / width * ORTHO;
-	my_t dy = 2 * (y - height*0.5) / height * ORTHO;
 	//printf("mouse click on (%d, %d), (%I64d, %I64d)\n", x, y, dx, dy);
 
 	if (button == GLUT_LEFT_BUTTON) {
 		if (state == GLUT_DOWN) {
+			my_t dx = 2 * (x - width*0.5) / width * ORTHO;
+			my_t dy = 2 * (y - height*0.5) / height * ORTHO;
 			ga.x1 = dx;
 			ga.y1 = dy;
+			glutPostRedisplay();
 		}
 	}
 	else if (button == GLUT_RIGHT_BUTTON) {
 		if (state == GLUT_DOWN) {
+			my_t dx = 2 * (x - width*0.5) / width * ORTHO;
+			my_t dy = 2 * (y - height*0.5) / height * ORTHO;
 			ga.x2 = dx;
 			ga.y2 = dy;
+			glutPostRedisplay();
 		}
 	}
 
-	glutPostRedisplay();
 }
 
 void onMouseDrag(int x, int y) {
