@@ -67,10 +67,12 @@ Implementation of virtual gears required for the sport called the Foxhunt game w
 
 [![Signal reflection](https://img.youtube.com/vi/2uKSR1LshKs/0.jpg)](https://www.youtube.com/watch?v=2uKSR1LshKs "Signal reflection")
 
+* **[5/8] Web Online Realtime Graphical Simulation
+
 [![Signal Simulation Web Socket](https://img.youtube.com/vi/h7f6DAYvjwM/0.jpg)](https://www.youtube.com/watch?v=h7f6DAYvjwM "Signal Simulation Web Socket")
 
 ### Online realtime signal simulation prototyping
-We used node.js and socket.io. (see WebGraphic and SeqProgram for this)
+We used node.js, socket.io, and pixi.js. (see WebGraphic and SeqProgram for this)
 
 ```javascript
 function runCalculation(){
