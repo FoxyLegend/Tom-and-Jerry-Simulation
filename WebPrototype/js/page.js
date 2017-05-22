@@ -5,7 +5,7 @@ $(function(){
 	
 	var graphics = new PIXI.Graphics();
 
-	var background = new PIXI.Sprite.fromImage('/kaistmap.jpg');
+	var background = new PIXI.Sprite.fromImage('/kaistmaposm.jpg');
 	background.width = 800;
 	background.height = 800;
 	app.stage.addChild(background);

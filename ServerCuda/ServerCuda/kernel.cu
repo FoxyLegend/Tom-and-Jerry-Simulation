@@ -43,6 +43,7 @@ int num_hounds;
 int width = 800, height = 800;
 signal sig[N];
 double compass[10][NCOMPASS];
+int count[10][NCOMPASS];
 int selection_mode = 0; //generator: 0, detector: 1
 
 node *Nodes;
@@ -446,6 +447,11 @@ Error:
 
 void convertToCompass() {
 	int i, j, hidx, sidx;
+	for (i = 0; i < 10; i++) {
+		for (j = 0; j < NCOMPASS; j++) {
+			count[i][j] = 0; //initialzie
+		}
+	}
 	double sum;
 
 	for (i = 0; i < num_hounds; i++) {
@@ -456,19 +462,25 @@ void convertToCompass() {
 
 	int rN = N - (N % num_hounds);
 	int eachN = rN / num_hounds;
-	int sn = eachN / NCOMPASS;
+	int deg;
 	for (i = 0; i < rN; i++) {
 		hidx = i / eachN;
-		sidx = (i % eachN) / (eachN / NCOMPASS);
-		
-		if (!sig[i].dead) {
-			//printf("compass[%d][%d] += %lld\n", hidx, sidx, sig[i].ss);
-		}
+
+		deg = (int)(atan2(-sig[i].vy, -sig[i].vx) * 180 / PI);
+		if (deg < 0) deg += 360;
+		sidx = NCOMPASS * deg / 360;
 
 		if (!sig[i].dead) {
-			compass[hidx][sidx] += 100000 / sig[i].ss;
+			compass[hidx][sidx] += 10000000 / sig[i].ss;
+			count[hidx][sidx] ++;
 		}
 		//compass[hidx]
+	}
+	for (i = 0; i < hidx; i++) {
+		for (j = 0; j < NCOMPASS; j++) {
+			if(count[i][j] != 0)
+				compass[i][j] /= count[i][j];
+		}
 	}
 }
 
@@ -509,6 +521,7 @@ int main(int argc, char* argv[])
 		}
 		fprintf(stdout, "\n");
 	}
+
 	/*
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGBA | GLUT_DEPTH);
