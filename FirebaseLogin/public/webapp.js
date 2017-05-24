@@ -71,6 +71,9 @@ var handleSignedInUser = function(user) {
     document.getElementById('photo').style.display = 'none';
   }
   
+  //lat: 36.3727370,
+  //lng: 127.3627589
+					
   gameroomRef.on('value', function(snapshot) {
 		console.log(snapshot);
 		$("#menu-board").html("<button id='create-game'>Create New Game</button>");
@@ -79,10 +82,6 @@ var handleSignedInUser = function(user) {
 			gameroomRef.set({
 				creator: firebase.auth().currentUser.email,
 				state: 'ready',
-				fox: {
-					lat: 36.3727370,
-					lng: 127.3627589
-				}
 			});
 		});
 		
@@ -97,16 +96,39 @@ var handleSignedInUser = function(user) {
 			// ...
 			$("#menu-board").append("<p><b>Creator:</b> " + val.creator + " </p>")
 			
-			if(val.members){
-				var mid;
-				for(mid in val.members){
-					var m = val.members[mid];
-					$("#menu-board").append("<p>"+m.email+ " (" + m.lat + ", " + m.lng + ")	 </p>");
+			var ulm = $("<ul>").append($("<h4>").text("MEMBERS"));
+			var ulf = $("<ul>").append($("<h4>").text("FOXES"));
+			var ulh = $("<ul>").append($("<h4>").text("HOUNDS"));
+			for(var mid in val.members){
+				var m = val.members[mid];
+				if(!m.email){
+					gameroomRef.child("members").child(mid).remove();
+				}
+				else {
+					ulm.append($("<li>").text(m.email + "[" + m.role + "]" + " (" + m.lat + ", " + m.lng + ")"));
+					if(m.role == 'fox'){
+						ulf.append($("<li>").text(m.email));
+					}
+					if(m.role == 'hound'){
+						ulh.append($("<li>").text(m.email));
+					}
 				}
 			}
+			$("#menu-board").append(ulm);
+			$("#menu-board").append(ulf);
+			$("#menu-board").append(ulh);
 			
-			$("#menu-board").append("<button id='start-game'>Start game</button> ");
-			$("#menu-board").append("<button id='remove-room'>Remove room</button>");
+			if(val.state == 'ready'){
+				$("#menu-board").append($("<button>").attr("id", "start-game").text("Start game"));
+				$("#start-game").click(function(){
+					gameroomRef.child("state").set("started");
+				});
+			}
+			else {
+				$("#menu-board").append($("<div>").append($("<b>").text("Game already started")));
+			}
+			
+			$("#menu-board").append($("<button>").attr("id", "remove-room").text("Remove room"));
 			$("#remove-room").click(function(){
 				gameroomRef.set(null);
 			});
