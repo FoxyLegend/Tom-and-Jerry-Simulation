@@ -29,9 +29,8 @@ body {
 #user-info {
   border: 1px solid #CCC;
   clear: both;
-  margin: 0 auto 20px;
+  margin: 0 auto;
   max-width: 400px;
-  padding: 10px;
   text-align: left;
 }
 
@@ -58,7 +57,7 @@ body {
   }
 }
 
-#create-game {
+button {
 	width: 200px;
 	height: 50px;
 	font-size: 20px;

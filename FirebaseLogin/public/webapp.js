@@ -19,6 +19,9 @@
 /**
  * @return {!Object} The FirebaseUI config.
  */
+var audio = new Audio('audio_file.mp3');
+audio.play();
+
 function getUiConfig() {
   return {
     'callbacks': {
@@ -56,8 +59,59 @@ var ui = new firebaseui.auth.AuthUI(firebase.auth());
  * @param {!firebase.User} user
  */
  
+
+var cx = 1273623389;
+var cy = 363706170;
+
+var app = new PIXI.Application(800, 800);
+//document.body.appendChild(app.view);
+
+var graphics = new PIXI.Graphics();
+
+var background = new PIXI.Sprite.fromImage('/kaistmap.jpg');
+background.width = 800;
+background.height = 800;
+app.stage.addChild(background);
+app.stage.addChild(graphics);
+
+/*socket.on('position-update', function(serverData){
+	//console.log(serverData);
+	var pos = serverData.pos;
+	graphics.clear();
+	graphics.lineStyle(0);
+	graphics.beginFill(0xFF0000, .5);
+	graphics.drawCircle(pos.gx, pos.gy, 5);
+	
+	graphics.lineStyle(0);
+	graphics.beginFill(0x0000FF, .5);
+	graphics.drawCircle(pos.ax, pos.ay, 5);
+	
+	var sig = serverData.data;
+	//console.log(sig);
+	//alert(serverData.message);
+	//graphics.position.set(pos.ax, pos.ay);
+	
+	for(var i = 0; i < sig.length; i++){
+		//console.log(sig[i]);
+		// Move it to the beginning of the line
+		//graphics.position.set(pos.ax, pos.ay);
+		
+		if(sig[i] == 0) continue;
+		var tx = -(sig[i + 360]) / sig[i] / 50;
+		var ty = -(sig[i + 360*2]) / sig[i] / 50;
+		//glVertex3f(pos.ax + tx, pos.ay + ty, 0.0f);
+		
+		//graphics.position.set(pos.ax, pos.ay);
+		// Draw the line (endPoint should be relative to myGraph's position)
+		//console.log(tx, ty);
+		graphics.lineStyle(2, 0xff00ff)
+			   .moveTo(pos.ax, pos.ay)
+			   .lineTo(pos.ax + tx, pos.ay - ty);
+	}
+});*/
+
 var gameroomRef = firebase.database().ref('/gameroom');
-  
+
 var handleSignedInUser = function(user) {
   document.getElementById('user-signed-in').style.display = 'block';
   document.getElementById('user-signed-out').style.display = 'none';
@@ -71,66 +125,142 @@ var handleSignedInUser = function(user) {
     document.getElementById('photo').style.display = 'none';
   }
   
-  //lat: 36.3727370,
-  //lng: 127.3627589
 					
-  gameroomRef.on('value', function(snapshot) {
-		console.log(snapshot);
-		$("#menu-board").html("<button id='create-game'>Create New Game</button>");
-		
-		$('#create-game').click(function(){
-			gameroomRef.set({
-				creator: firebase.auth().currentUser.email,
-				state: 'ready',
-			});
-		});
-		
+    var timer;
+    var intervalID;
+  
+  gameroomRef.on('value', function(snapshot){
+		$("#menu-board").empty();
 	    var val = snapshot.val();
+		console.log(val);
 		if(val){
 			if(!val.creator){
 				gameroomRef.set(null);
 				return;
 			}
-			console.log(val);
-			$("#menu-board").empty();
-			// ...
 			$("#menu-board").append("<p><b>Creator:</b> " + val.creator + " </p>")
 			
-			var ulm = $("<ul>").append($("<h4>").text("MEMBERS"));
-			var ulf = $("<ul>").append($("<h4>").text("FOXES"));
-			var ulh = $("<ul>").append($("<h4>").text("HOUNDS"));
-			for(var mid in val.members){
-				var m = val.members[mid];
-				if(!m.email){
-					gameroomRef.child("members").child(mid).remove();
-				}
-				else {
-					ulm.append($("<li>").text(m.email + "[" + m.role + "]" + " (" + m.lat + ", " + m.lng + ")"));
+			if(val.state == 'started') {
+				graphics.clear();
+				$("#menu-board").append($("<div>").append($("<b>").text("Game already started")));
+				$("#menu-board").append(app.view);
+				
+				for(var mid in val.members){
+					var m = val.members[mid];
+					var px, py;
+					if(m.lng && m.lat){				
+						px = (parseInt(m.lng * 1e7) - cx) * 400 / 80000 + 400;
+						py = -(parseInt(m.lat * 1e7) - cy) * 400 / 80000 + 400;
+					}
+					
 					if(m.role == 'fox'){
-						ulf.append($("<li>").text(m.email));
+						graphics.moveTo(0, 0);
+						graphics.lineStyle(0);
+						graphics.beginFill(0xFF0000, .5);
+						graphics.drawCircle(px, py, 5);
 					}
 					if(m.role == 'hound'){
-						ulh.append($("<li>").text(m.email));
+						graphics.moveTo(0, 0);
+						graphics.lineStyle(0);
+						graphics.beginFill(0x0000FF, .5);
+						graphics.drawCircle(px, py, 5);
+						
+						if(m.signal){
+							var sig = JSON.parse(m.signal);
+							for(var i = 0; i < sig.length; i++){
+								//console.log(sig[i]);
+								// Move it to the beginning of the line
+								//graphics.position.set(pos.ax, pos.ay);
+								
+								if(sig[i] == 0) continue;
+								var tx = -(sig[i + 360]) / sig[i] / 50;
+								var ty = -(sig[i + 360*2]) / sig[i] / 50;
+								//glVertex3f(pos.ax + tx, pos.ay + ty, 0.0f);
+								
+								//graphics.position.set(pos.ax, pos.ay);
+								// Draw the line (endPoint should be relative to myGraph's position)
+								console.log(tx, ty);
+								graphics.lineStyle(2, 0xff00ff)
+									   .moveTo(px, py)
+									   .lineTo(px + tx, py - ty);
+							}
+						}
 					}
 				}
 			}
-			$("#menu-board").append(ulm);
-			$("#menu-board").append(ulf);
-			$("#menu-board").append(ulh);
-			
-			if(val.state == 'ready'){
-				$("#menu-board").append($("<button>").attr("id", "start-game").text("Start game"));
-				$("#start-game").click(function(){
-					gameroomRef.child("state").set("started");
-				});
-			}
-			else {
-				$("#menu-board").append($("<div>").append($("<b>").text("Game already started")));
+			else {				
+				var ulm = $("<ul>").append($("<h4>").text("MEMBERS"));
+				var ulf = $("<ul>").append($("<h4>").text("FOXES"));
+				var ulh = $("<ul>").append($("<h4>").text("HOUNDS"));
+				for(var mid in val.members){
+					var m = val.members[mid];
+					if(!m.email){
+						gameroomRef.child("members").child(mid).remove();
+					}
+					else {
+						ulm.append($("<li>").text(m.email + "[" + m.role + "]" + " (" + m.lat + ", " + m.lng + ")"));
+						if(m.role == 'fox'){
+							ulf.append($("<li>").text(m.email));
+						}
+						if(m.role == 'hound'){
+							ulh.append($("<li>").text(m.email));
+						}
+					}
+				}
+				$("#menu-board").append(ulm);
+				$("#menu-board").append(ulf);
+				$("#menu-board").append(ulh);
+				
+				
+				if(val.state == 'ready'){
+					$("#menu-board").append($("<button>").attr("id", "start-game").text("Start game"));
+					$("#start-game").click(function(){
+						timer = 5;
+						intervalID = setInterval(function(){
+							console.log(timer);
+							if(timer > 0) timer--;
+							
+							$("#starting-state").text("Game starts in " + timer + " seconds...");
+							
+							if(timer == 0){
+								clearInterval(intervalID);
+								gameroomRef.child("state").set("started");
+							}
+						}, 1000);
+						gameroomRef.child("state").set("starting");
+					});
+				}
+				else if(val.state == 'starting'){
+					$("#menu-board").append($("<div>").append($("<b>").attr("id", "starting-state").text("Game starts in " + timer + " seconds...")));
+				}
 			}
 			
 			$("#menu-board").append($("<button>").attr("id", "remove-room").text("Remove room"));
 			$("#remove-room").click(function(){
 				gameroomRef.set(null);
+			});
+		}
+		else {
+			$("#menu-board").append($("<button>").attr("id", "create-game").text("Create New Game"));
+			$('#create-game').click(function(){
+				gameroomRef.set({
+					creator: firebase.auth().currentUser.email,
+					state: 'ready',
+					members: {
+						"-SAMPLEFOX": {
+							email: "fox@test.com",
+							lat: 36.3726170, // 363706170
+							lng: 127.3603389, // 1273623389
+							role: "fox"
+						},
+						"-SAMPLEHOUND": {
+							email: "hound@test.com",
+							lat: 36.3706170,
+							lng: 127.3613389,
+							role: "hound"
+						}
+					}
+				});
 			});
 		}
 		
