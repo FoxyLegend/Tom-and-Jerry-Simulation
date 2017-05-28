@@ -22,18 +22,10 @@ var db = admin.database();
 var ref = db.ref("gameroom");
 var calculate = false;
 var members = null;
-ref.on("value", function(snapshot) {
-	val = snapshot.val();
-	if(!val || val.state != 'started'){
-		calculate = false;
-		members = null;
-	}
-	else {
-		calculate = true;
-		members = val.members;
-	}
+ref.child("members").on("value", function(snapshot) {
+	var val = snapshot.val();
+	members = val;
 });
-
 
 var gx, gy;
 var ax = [], ay = [], hid = [];
@@ -43,7 +35,8 @@ var signal;
 var cx = 1273623389;
 var cy = 363706170;
 
-setInterval(function(){
+
+function calculateSignal(){
 	if(!calculate) return;
 	var count = 0;
 	var fox = 0;
@@ -90,6 +83,41 @@ setInterval(function(){
 		ref.child("members").child(hid[0]).child("signal").set(JSON.stringify(signal));
 		console.log("Newly calculated: ", (new Date()).toGMTString(), signal.length);
 	});
-	
-	
-}, 3000);
+}
+
+var timer;
+var intervalID;
+//starting the actual game
+ref.child("state").on("value", function(snapshot){
+	var val = snapshot.val();
+	if(!val) return;
+	if(val == "starting"){
+		timer = 5;
+		ref.child("time").set(timer);
+		intervalID = setInterval(function(){
+			if(timer > 0) timer--;
+			
+			ref.child("time").set(timer);
+			if(timer == 0){
+				ref.child("state").set("started");
+				clearInterval(intervalID);
+			}
+		}, 1000);
+	}
+	if(val == "started"){
+		timer = 60*30;
+		ref.child("time").set(timer);
+		
+		intervalID = setInterval(function(){
+			if(timer%3 == 0) calculateSignal();
+			if(timer > 0) timer--;
+			
+			ref.child("time").set(timer);
+			if(timer == 0){
+				ref.child("state").set("finished");
+				clearInterval(intervalID);
+			}
+		}, 1000);
+	}
+});
+

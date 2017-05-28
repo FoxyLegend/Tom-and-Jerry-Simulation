@@ -56,18 +56,12 @@ public class BaseExpandableAdapter extends BaseExpandableListAdapter {
             viewHolder = new ViewHolder();
             v = inflater.inflate(R.layout.list_row, parent, false);
             viewHolder.tv_groupName = (TextView) v.findViewById(R.id.tv_group);
-            viewHolder.iv_image = (ImageView) v.findViewById(R.id.iv_image);
             v.setTag(viewHolder);
         }else{
             viewHolder = (ViewHolder)v.getTag();
         }
          
         // 그룹을 펼칠때와 닫을때 아이콘을 변경해 준다.
-        if(isExpanded){
-            viewHolder.iv_image.setBackgroundColor(Color.GREEN);
-        }else{
-            viewHolder.iv_image.setBackgroundColor(Color.WHITE);
-        }
          
         viewHolder.tv_groupName.setText(getGroup(groupPosition));
 
@@ -122,7 +116,6 @@ public class BaseExpandableAdapter extends BaseExpandableListAdapter {
     public boolean isChildSelectable(int groupPosition, int childPosition) { return false; }
 
     class ViewHolder {
-        public ImageView iv_image;
         public TextView tv_groupName;
         public TextView tv_childName;
     }

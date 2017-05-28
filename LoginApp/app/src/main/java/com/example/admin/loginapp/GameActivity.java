@@ -63,7 +63,7 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
     private ExpandableListView mListView;
     private BaseExpandableListAdapter mBaseAdapter;
 
-
+    private boolean foxExist = true;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -76,6 +76,8 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
             finish();
             startActivity(new Intent(this, MainActivity.class));
         }user = mAuth.getCurrentUser();
+
+        Log.e(TAG, "Authorized anyway");
 
         userEmail = (TextView) findViewById(R.id.textView);
         userEmail.setText("NOT INITIALIZED");
@@ -159,53 +161,59 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
         mDatabase.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
+                buttonAvailable = false;
+                enableJoinButton = true;
+                mFoxListContent.clear();
+                mHoundListContent.clear();
+                foxExist = false;
                 if(dataSnapshot.exists() && dataSnapshot.child("creator").exists() && dataSnapshot.child("state").exists()){
-                    String txt = "";
-                    Member member;
-                    buttonAvailable = false;
-                    enableJoinButton = true;
-                    mFoxListContent.clear();
-                    mHoundListContent.clear();
-                    for (DataSnapshot ds : dataSnapshot.child("/members").getChildren()){
-                        myUID = ds.getKey().toString();
-                        member = ds.getValue(Member.class);
-                        txt += "members: " + member.email + "[" + member.role + "]" + "\n\t(" + member.lat + ", " + member.lng + ")\n";
+                    if(dataSnapshot.child("state").getValue().toString().equalsIgnoreCase("started")){
 
-                        if(user.getEmail().equalsIgnoreCase(member.email)){
-                            enableJoinButton = false;
-                        }
-                        if(member.role.equalsIgnoreCase("fox")){
-                            mFoxListContent.add(member.email);
-                        }
-                        if(member.role.equalsIgnoreCase("hound")){
-                            mHoundListContent.add(member.email);
-                        }
-
-                    }
-
-                    if(enableJoinButton){
-                        buttonJoin.setText("Join");
                     }
                     else {
-                        buttonJoin.setText("Exit");
+                        String txt = "";
+                        Member member;
+                        for (DataSnapshot ds : dataSnapshot.child("/members").getChildren()){
+                            member = ds.getValue(Member.class);
+                            txt += "members: " + member.email + "[" + member.role + "]" + "\n\t(" + member.lat + ", " + member.lng + ")\n";
+
+                            if(user.getEmail().equalsIgnoreCase(member.email)){
+                                enableJoinButton = false;
+                                myUID = ds.getKey().toString();
+                            }
+                            if(member.role.equalsIgnoreCase("fox")){
+                                mFoxListContent.add(member.email);
+                                foxExist = true;
+                            }
+                            if(member.role.equalsIgnoreCase("hound")){
+                                mHoundListContent.add(member.email);
+                            }
+
+                        }
+
+                        if(enableJoinButton){
+                            buttonJoin.setText("Join");
+                        }
+                        else {
+                            buttonJoin.setText("Exit");
+                        }
+
+                        userEmail.setText(
+                                dataSnapshot.child("creator").getValue().toString() + "\n"
+                                        + txt
+                                        + dataSnapshot.child("members").getChildrenCount() + "\n"
+                                        + dataSnapshot.child("state").getValue().toString()
+                        );
+                        Log.e(TAG, "Data loaded successfully." + dataSnapshot.getValue());
+
+
+                        if(dataSnapshot.child("state").getValue().toString().equalsIgnoreCase("ready"))
+                            buttonAvailable = true;
+                        else
+                            buttonAvailable = false;
+
+                        mBaseAdapter.notifyDataSetChanged();
                     }
-
-                    userEmail.setText(
-                            dataSnapshot.child("creator").getValue().toString() + "\n"
-                            + txt
-                            + dataSnapshot.child("members").getChildrenCount() + "\n"
-                            + dataSnapshot.child("state").getValue().toString()
-                    );
-                    Log.e(TAG, "Data loaded successfully." + dataSnapshot.getValue());
-
-
-                    if(dataSnapshot.child("state").getValue().toString().equalsIgnoreCase("ready"))
-                        buttonAvailable = true;
-                    else
-                        buttonAvailable = false;
-
-                    mBaseAdapter.notifyDataSetChanged();
-
                 }
                 else {
                     userEmail.setText("*** There is no game room ***");
@@ -264,7 +272,7 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
         if (ActivityCompat.checkSelfPermission(getBaseContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
                 && ActivityCompat.checkSelfPermission(getBaseContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // 권한 획득에 대한 설명 보여주기
-            if (ActivityCompat.shouldShowRequestPermissionRationale(getParent(),
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
                     Manifest.permission.ACCESS_FINE_LOCATION)) {
 
                 // 사용자에게 권한 획득에 대한 설명을 보여준 후 권한 요청을 수행
@@ -368,7 +376,8 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View v) {
         if (v == buttonLogout)
         {
-            mDatabase.child("members").child(myUID).removeValue();
+            if(myUID != null)
+                mDatabase.child("members").child(myUID).removeValue();
             mAuth.signOut();
             finish();
             startActivity(new Intent(this, MainActivity.class));
