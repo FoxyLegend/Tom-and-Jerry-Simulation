@@ -103,7 +103,6 @@ function calculateSignal(){
 
 var timer;
 var intervalID = null;
-var started = false;
 //starting the actual game
 ref.child("state").on("value", function(snapshot){
 	if(intervalID){
@@ -114,7 +113,7 @@ ref.child("state").on("value", function(snapshot){
 	if(!val){
 		return;
 	}
-	if(val == "starting" && !started){
+	if(val == "starting"){
 		timer = 5;
 		ref.child("time").set(timer);
 		intervalID = setInterval(function(){
@@ -124,15 +123,12 @@ ref.child("state").on("value", function(snapshot){
 			ref.child("time").set(timer);
 			if(timer == 0){
 				ref.child("state").set("started");
-				started = true;
 			}
 		}, 1000);
 	}
 	if(val == "started"){
 		timer = 60*30;
-		clearInterval(intervalID);
 		ref.child("time").set(timer);
-		console.log("strange");
 		
 		intervalID = setInterval(function(){
 			if(timer%3 == 0){

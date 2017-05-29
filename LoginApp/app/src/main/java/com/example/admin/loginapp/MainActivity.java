@@ -75,23 +75,6 @@ public class MainActivity extends AppCompatActivity implements
         editTextpass = (EditText)findViewById(R.id.editTextpass);
         imgView = (ImageView)findViewById(R.id.imageView);
 
-        myMap = BitmapFactory.decodeResource(getResources(), R.drawable.kaistmap);
-
-
-        Bitmap backBit = Bitmap.createBitmap(myMap.getWidth()*2, myMap.getHeight()*2, Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(backBit);
-        canvas.drawARGB(255, 225, 225, 255);
-        canvas.drawBitmap(myMap, myMap.getWidth()/2, myMap.getHeight()/2, null);
-
-        int width = backBit.getWidth();
-        int height = backBit.getHeight();
-
-        backBit = Bitmap.createBitmap(backBit, width*3/6, height*3/6, width/10, height/10);
-        //backBit = Bitmap.createScaledBitmap(backBit, width, width * 3 / 4, true);
-
-        imgView.setImageBitmap(backBit);
-
-        Log.e(TAG, "Google Sign-In failed. " + myMap.getWidth() + "/" + myMap.getHeight());
 
         RegisterButton.setOnClickListener( this);
         LoginButton.setOnClickListener(this);

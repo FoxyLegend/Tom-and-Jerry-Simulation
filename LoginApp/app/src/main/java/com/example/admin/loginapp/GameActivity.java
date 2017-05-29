@@ -77,6 +77,7 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
             startActivity(new Intent(this, MainActivity.class));
         }user = mAuth.getCurrentUser();
 
+
         Log.e(TAG, "Authorized anyway");
 
         userEmail = (TextView) findViewById(R.id.textView);
@@ -157,6 +158,21 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
         });
 
 
+        mDatabase.child("state").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if(dataSnapshot.exists() && dataSnapshot.getValue().toString().equalsIgnoreCase("started")){
+                    mDatabase.child("state").removeEventListener(this);
+                    startActivity(new Intent(getBaseContext(), MapActivity.class));
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
         // Attach a listener to read the data at our posts reference
         mDatabase.addValueEventListener(new ValueEventListener() {
             @Override
@@ -212,13 +228,13 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
                         else
                             buttonAvailable = false;
 
-                        mBaseAdapter.notifyDataSetChanged();
                     }
                 }
                 else {
                     userEmail.setText("*** There is no game room ***");
                     Log.e(TAG, "Data not exist.");
                 }
+                mBaseAdapter.notifyDataSetChanged();
             }
 
             @Override
@@ -277,7 +293,13 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
 
                 // 사용자에게 권한 획득에 대한 설명을 보여준 후 권한 요청을 수행
 
-            } else {
+            } else if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                    Manifest.permission.ACCESS_COARSE_LOCATION)) {
+
+                // 사용자에게 권한 획득에 대한 설명을 보여준 후 권한 요청을 수행
+
+            }
+            else {
 
                 // 권한 획득의 필요성을 설명할 필요가 없을 때는 아래 코드를
                 //수행해서 권한 획득 여부를 요청한다.

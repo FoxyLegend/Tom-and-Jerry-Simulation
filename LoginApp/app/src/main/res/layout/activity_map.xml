@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.v7.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="com.example.admin.loginapp.MapActivity">
+
+
+    <ImageView
+        android:id="@+id/mapImageView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:adjustViewBounds="true"
+        android:scaleType="fitXY"
+        android:src="@drawable/kaistmap"/>
+
+    <android.support.v7.widget.LinearLayoutCompat
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <android.support.v7.widget.AppCompatButton
+            android:layout_width="0"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="N1"
+            android:id="@+id/N1"/>
+
+        <android.support.v7.widget.AppCompatButton
+            android:layout_width="0"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="E3"
+            android:id="@+id/E3"/>
+
+        <android.support.v7.widget.AppCompatButton
+            android:layout_width="0"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="KISTI"
+            android:id="@+id/KISTI"/>
+    </android.support.v7.widget.LinearLayoutCompat>
+
+</android.support.v7.widget.LinearLayoutCompat>

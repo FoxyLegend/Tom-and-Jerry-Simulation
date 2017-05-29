@@ -798,99 +798,71 @@ void onKeyPress(unsigned char key, int x, int y) {
 
 int main(int argc, char* argv[])
 {
-//	if (argc == 1) return 0;
-	int x, y;
-	int i, j;
-	my_t dx, dy;
-	x = atoi(argv[1]);
-	y = atoi(argv[2]);
-	//x = 1273600590;
-	//y = 363720970;
-	/*
-	y = height - y - 1;
-	dx = 2 * (x - width*0.5) / width * ORTHO;
-	dy = 2 * (y - height*0.5) / height * ORTHO;
-	*/
-	dx = x - mapx;
-	dy = y - mapy;
-	gx = dx;
-	gy = dy;
-
 	initialize();
-	int numHounds = atoi(argv[3]);
-	printf("[");
-	for (j = 0; j < numHounds; j++) {
-		x = atoi(argv[4+j*2]);
-		y = atoi(argv[5+j*2]);
+	if (argc == 1) {
+		glutInit(&argc, argv);
+		glutInitDisplayMode(GLUT_SINGLE | GLUT_RGBA | GLUT_DEPTH);
+		glutInitWindowSize(width, height);
+		glutCreateWindow("CS408 SIGNAL TEST");
+		glutDisplayFunc(display);
+		glutMouseFunc(onMouseButton);					// Register onMouseButton function to call that when user moves mouse.
+		glutMotionFunc(onMouseDrag);					// Register onMouseDrag function to call that when user drags mouse.
+
+		glutKeyboardFunc(onKeyPress);
+		glutMainLoop();
+	}
+	else {
+		int x, y;
+		int i, j;
+		my_t dx, dy;
+		x = atoi(argv[1]);
+		y = atoi(argv[2]);
+		//x = 1273600590;
+		//y = 363720970;
 		/*
 		y = height - y - 1;
 		dx = 2 * (x - width*0.5) / width * ORTHO;
 		dy = 2 * (y - height*0.5) / height * ORTHO;
 		*/
-		//x = 1273613989;
-		//y = 363733969;
 		dx = x - mapx;
 		dy = y - mapy;
-		ax = dx;
-		ay = dy;
+		gx = dx;
+		gy = dy;
 
-		signal_calculation();
-		convertToCompass();
-		for (i = 0; i < NCOMPASS; i++) {
-			if (i == NCOMPASS - 1) printf("%d]", compass[i]);
-			else if (i == 0) printf("[%d, ", compass[i]);
-			else {
-				printf("%d, ", compass[i]);
+		int numHounds = atoi(argv[3]);
+		printf("[");
+		for (j = 0; j < numHounds; j++) {
+			x = atoi(argv[4 + j * 2]);
+			y = atoi(argv[5 + j * 2]);
+			/*
+			y = height - y - 1;
+			dx = 2 * (x - width*0.5) / width * ORTHO;
+			dy = 2 * (y - height*0.5) / height * ORTHO;
+			*/
+			//x = 1273613989;
+			//y = 363733969;
+			dx = x - mapx;
+			dy = y - mapy;
+			ax = dx;
+			ay = dy;
+
+			signal_calculation();
+			convertToCompass();
+			for (i = 0; i < NCOMPASS; i++) {
+				if (i == NCOMPASS - 1) printf("%d]", compass[i]);
+				else if (i == 0) printf("[%d, ", compass[i]);
+				else {
+					printf("%d, ", compass[i]);
+				}
 			}
+
+			if (j != numHounds - 1) printf(",");
 		}
 
-		if (j != numHounds - 1) printf(",");
+		printf("]");
 	}
-
-	printf("]");
-
-	/*
-	for (i = 0; i < N; i++) {
-		if (sig[i].dead) sig[i].ss = 0;
-
-		if(i == N-1) printf("%lld, ", sig[i].ss);
-		else if(i == 0) printf("[%lld, ", sig[i].ss);
-		else {
-			printf("%lld, ", sig[i].ss);
-		}
-	}
-	for (i = 0; i < N; i++) {
-		if (sig[i].dead) sig[i].vx = 0;
-
-		if (i == N - 1) printf("%lld, ", sig[i].vx);
-		else if (i == 0) printf("%lld, ", sig[i].vx);
-		else {
-			printf("%lld, ", sig[i].vx);
-		}
-	}
-	for (i = 0; i < N; i++) {
-		if (sig[i].dead) sig[i].vy = 0;
-
-		if (i == N - 1) printf("%lld]", sig[i].vy);
-		else if (i == 0) printf("%lld, ", sig[i].vy);
-		else {
-			printf("%lld, ", sig[i].vy);
-		}
-	}
-	*/
 	
-	/*
-	glutInit(&argc, argv);
-	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGBA | GLUT_DEPTH);
-	glutInitWindowSize(width, height);
-	glutCreateWindow("CS408 SIGNAL TEST");
-	glutDisplayFunc(display);
-	glutMouseFunc(onMouseButton);					// Register onMouseButton function to call that when user moves mouse.
-	glutMotionFunc(onMouseDrag);					// Register onMouseDrag function to call that when user drags mouse.
 
-	glutKeyboardFunc(onKeyPress);
-	glutMainLoop();
-	*/
 	clean_up();
 
 	return 0;
