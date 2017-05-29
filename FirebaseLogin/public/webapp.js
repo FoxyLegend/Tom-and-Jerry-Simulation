@@ -149,6 +149,7 @@ var handleSignedInUser = function(user) {
 		$("#menu-board").empty();
 	    var val = snapshot.val();
 		console.log(val);
+		var fx, fy;
 		if(val){
 			var time = val.time;
 			if(!val.creator){
@@ -173,39 +174,40 @@ var handleSignedInUser = function(user) {
 					}
 					
 					if(m.role == 'fox'){
-						graphics.moveTo(0, 0);
-						graphics.lineStyle(0);
-						graphics.beginFill(0xFF0000, .5);
-						graphics.drawCircle(px, py, 5);
+						fx = px;
+						fy = py;
 					}
 					if(m.role == 'hound'){
 						graphics.moveTo(0, 0);
 						graphics.lineStyle(0);
-						graphics.beginFill(0x0000FF, .5);
+						graphics.beginFill(0x0000FF, 1);
 						graphics.drawCircle(px, py, 5);
 						
 						if(m.signal){
 							var sig = JSON.parse(m.signal);
-							for(var i = 0; i < sig.length; i++){
-								//console.log(sig[i]);
-								// Move it to the beginning of the line
-								//graphics.position.set(pos.ax, pos.ay);
-								
-								if(sig[i] == 0) continue;
-								var tx = -(sig[i + 360]) / sig[i] / 50;
-								var ty = -(sig[i + 360*2]) / sig[i] / 50;
-								//glVertex3f(pos.ax + tx, pos.ay + ty, 0.0f);
-								
-								//graphics.position.set(pos.ax, pos.ay);
-								// Draw the line (endPoint should be relative to myGraph's position)
-								console.log(tx, ty);
-								graphics.lineStyle(2, 0xff00ff)
+							
+							for (var i = 0; i < sig.length; i++) {
+								var rad = i * (360 / sig.length) * 3.141592 / 180;
+								var vx = Math.cos(rad);
+								var vy = Math.sin(rad);
+								var tx = sig[i]*(vx) / 1000;
+								var ty = sig[i]*(vy) / 1000;
+								console.log("drawed");
+								graphics.lineStyle(1, 0xff00ff88)
 									   .moveTo(px, py)
 									   .lineTo(px + tx, py - ty);
 							}
+							
 						}
 					}
 				}
+				
+				// draw fox now
+				
+				graphics.moveTo(0, 0);
+				graphics.lineStyle(0);
+				graphics.beginFill(0xFF0000, 1);
+				graphics.drawCircle(fx, fy, 5);
 			}
 			else {				
 				var ulm = $("<ul>").append($("<h4>").text("MEMBERS"));
@@ -259,14 +261,20 @@ var handleSignedInUser = function(user) {
 					members: {
 						"-SAMPLEFOX": {
 							email: "fox@test.com",
-							lat: 36.3726170, // 363706170
-							lng: 127.3603389, // 1273623389
+							lat: 36.3720970, // 363706170
+							lng: 127.3600590, // 1273623389
 							role: "fox"
 						},
 						"-SAMPLEHOUND": {
 							email: "hound@test.com",
-							lat: 36.3706170,
-							lng: 127.3613389,
+							lat: 36.3715570,
+							lng: 127.3608189,
+							role: "hound"
+						},
+						"-SAMPLEHOUND2": {
+							email: "hound2@test.com",
+							lat: 36.3733969,
+							lng: 127.3613989,
 							role: "hound"
 						}
 					}

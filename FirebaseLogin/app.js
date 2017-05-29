@@ -23,8 +23,7 @@ var ref = db.ref("gameroom");
 var calculate = false;
 var members = null;
 ref.child("members").on("value", function(snapshot) {
-	var val = snapshot.val();
-	members = val;
+	members = snapshot.val();
 });
 
 var gx, gy;
@@ -37,7 +36,7 @@ var cy = 363706170;
 
 
 function calculateSignal(){
-	if(!calculate) return;
+	console.log('calculate signal');
 	var count = 0;
 	var fox = 0;
 	ax = [], ay = [], hid = [];
@@ -49,8 +48,8 @@ function calculateSignal(){
 		}
 		else {
 			if(m.lng && m.lat){				
-				px = (parseInt(m.lng * 1e7) - cx) * 400 / 80000 + 400;
-				py = -(parseInt(m.lat * 1e7) - cy) * 400 / 80000 + 400;
+				px = parseInt(m.lng * 1e7);
+				py = parseInt(m.lat * 1e7);
 			}
 			
 			if(m.role == 'fox'){
@@ -59,17 +58,27 @@ function calculateSignal(){
 				fox++;
 			}
 			if(m.role == 'hound'){
-				ax.push(px);
-				ay.push(py);
+				ax[mid]=px;
+				ay[mid]=py;
 				hid.push(mid);
 				count++;
 			}
 		}
 	}
 	
-	if(fox != 1 || count < 1) return;
+	if(fox != 1 || count < 1){
+		console.log("no member found");
+		return;
+	}
 	signal = null;
-	var prog = "SeqProgram.exe " + gx + " " + gy + " " + ax[0] + " " + ay[0];
+	
+	var prog = "SeqProgram.exe " + gx + " " + gy + " " + hid.length;
+	for (var i in hid){
+		id = hid[i];
+		prog += " " + ax[id] + " " + ay[id];
+	}
+	console.log(prog);
+	
 	exec(prog, (err, stdout, stderr) => {
 		if (err) {
 			console.error(err);
@@ -80,42 +89,61 @@ function calculateSignal(){
 		//console.log(signal);
 		
 		//console.log(hid[0], signal);
-		ref.child("members").child(hid[0]).child("signal").set(JSON.stringify(signal));
 		console.log("Newly calculated: ", (new Date()).toGMTString(), signal.length);
+		for (var i in hid){
+			id = hid[i];
+			ref.child("members").child(id).child("signal").set(JSON.stringify(signal[i]));
+		}
 	});
+	
+	
+	
+	
 }
 
 var timer;
-var intervalID;
+var intervalID = null;
+var started = false;
 //starting the actual game
 ref.child("state").on("value", function(snapshot){
+	if(intervalID){
+		clearInterval(intervalID);
+		intervalID = null;
+	}
 	var val = snapshot.val();
-	if(!val) return;
-	if(val == "starting"){
+	if(!val){
+		return;
+	}
+	if(val == "starting" && !started){
 		timer = 5;
 		ref.child("time").set(timer);
 		intervalID = setInterval(function(){
 			if(timer > 0) timer--;
+			console.log("starting " + timer);
 			
 			ref.child("time").set(timer);
 			if(timer == 0){
 				ref.child("state").set("started");
-				clearInterval(intervalID);
+				started = true;
 			}
 		}, 1000);
 	}
 	if(val == "started"){
 		timer = 60*30;
+		clearInterval(intervalID);
 		ref.child("time").set(timer);
+		console.log("strange");
 		
 		intervalID = setInterval(function(){
-			if(timer%3 == 0) calculateSignal();
+			if(timer%3 == 0){
+				console.log("calculating the signal");
+				calculateSignal();
+			}
 			if(timer > 0) timer--;
 			
 			ref.child("time").set(timer);
 			if(timer == 0){
 				ref.child("state").set("finished");
-				clearInterval(intervalID);
 			}
 		}, 1000);
 	}

@@ -1,47 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.v7.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center_horizontal"
     tools:context="com.example.admin.loginapp.MainActivity">
 
     <ImageView
         android:id="@+id/imageView"
-        android:layout_width="420dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:src="@drawable/tomjerry"
-        app:layout_constraintBottom_toTopOf="@+id/editTextemail"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:layout_constraintLeft_creator="1"
-        tools:layout_constraintRight_creator="1" />
+        android:adjustViewBounds="true"
+        android:scaleType="fitXY"
+        android:src="@drawable/tomjerry"/>
 
     <Button
-        android:id="@+id/LoginButton"
-        android:layout_width="0dp"
+        android:id="@+id/GoogleLoginButton"
+        android:layout_width="match_parent"
         android:layout_height="60dp"
         android:layout_marginBottom="3dp"
         android:layout_marginEnd="28dp"
         android:layout_marginLeft="28dp"
         android:layout_marginRight="28dp"
         android:layout_marginStart="28dp"
-        android:elevation="0dp"
-        android:text="Simple Login"
-        app:layout_constraintBottom_toTopOf="@+id/RegisterButton"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        tools:ignore="MissingConstraints"
-        tools:layout_constraintBottom_creator="1"
-        tools:layout_constraintLeft_creator="1"
-        tools:layout_constraintRight_creator="1" />
+        android:text="Simple Login" />
 
     <Button
         android:id="@+id/RegisterButton"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="48dp"
         android:text="Register"
         tools:ignore="MissingConstraints"
@@ -60,16 +48,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:hint="Google ID"
-        android:textSize="25sp"
-        tools:ignore="MissingConstraints"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        tools:layout_constraintTop_creator="1"
-        tools:layout_constraintRight_creator="1"
-        app:layout_constraintTop_toBottomOf="@+id/imageView"
-        tools:layout_constraintLeft_creator="1"
-        android:layout_marginTop="24dp"
-        app:layout_constraintHorizontal_bias="0.502" />
+        android:textSize="25sp"/>
 
     <EditText
         android:inputType="textPassword"
@@ -77,16 +56,19 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:hint="Password"
-        android:textSize="25sp"
-        tools:ignore="MissingConstraints"
-        tools:layout_constraintTop_creator="1"
-        tools:layout_constraintRight_creator="1"
-        app:layout_constraintRight_toRightOf="parent"
-        android:layout_marginTop="9dp"
-        app:layout_constraintTop_toBottomOf="@+id/editTextemail"
-        tools:layout_constraintLeft_creator="1"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintHorizontal_bias="0.502" />
+        android:textSize="25sp"/>
 
 
-</android.support.constraint.ConstraintLayout>
+    <Button
+        android:id="@+id/LoginButton"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:layout_marginBottom="3dp"
+        android:layout_marginEnd="28dp"
+        android:layout_marginLeft="28dp"
+        android:layout_marginRight="28dp"
+        android:layout_marginStart="28dp"
+        android:text="Simple Login" />
+
+
+</android.support.v7.widget.LinearLayoutCompat>

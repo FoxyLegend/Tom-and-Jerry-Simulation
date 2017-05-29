@@ -20,6 +20,7 @@
 #define kill(s) (s->dead = true)
 #define ORTHO 80000
 #define RADIUS 1000
+#define NCOMPASS 360
 
 typedef struct {
 	my_t x;
@@ -71,6 +72,9 @@ node meeting[50000];
 int nmeeting = 0;
 int point_mode = 0;
 int toggle[10];
+
+int compass[NCOMPASS];
+int count[NCOMPASS];
 
 void signal_set(signal *s, my_t x, my_t y, my_t vx, my_t vy, my_t ss, bool dead) {
 	s->x = x;
@@ -533,6 +537,34 @@ void spec(double val, color *c) {
 	c->b = 0.8*val;
 }
 
+
+void convertToCompass() {
+	int i, j, hidx, sidx;
+	double sum;
+
+	for (j = 0; j < NCOMPASS; j++) {
+		compass[j] = 0.0;
+		count[j] = 0; //initialzie
+	}
+
+	int deg;
+	for (i = 0; i < N; i++) {
+		if (sig[i].dead) continue;
+		deg = (int)(atan2(-sig[i].vy, -sig[i].vx) * 180 / PI);
+		if (deg < 0) deg += 360;
+		sidx = NCOMPASS * deg / 360;
+
+		if (!sig[i].dead) {
+			compass[sidx] += 1000000000 / sig[i].ss;
+			count[sidx] ++;
+		}
+	}
+	for (j = 0; j < NCOMPASS; j++) {
+		if (count[j] != 0)
+			compass[j] /= count[j];
+	}
+}
+
 void display()
 {
 
@@ -540,7 +572,7 @@ void display()
 
 	int i, j, in1, in2;
 	signal_calculation();
-
+	convertToCompass();
 	glClearColor(1, 1, 1, 0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
@@ -628,6 +660,7 @@ void display()
 
 	
 	glColor3d(0, 0, 1);
+	/*
 	for (int i = 0; i < N; i++) {
 		signal *si = &sig[i];
 		if (!si->dead && si->ss > 0 && si->ss < THRESHOLD) {
@@ -639,6 +672,18 @@ void display()
 			glVertex3f(ax + tx, ay + ty, 0.0f);
 			glEnd();
 		}
+	}
+	*/
+	for (int i = 0; i < NCOMPASS; i++) {
+		double rad = i * (360 / NCOMPASS) * PI / 180;
+		double vx = cos(rad);
+		double vy = sin(rad);
+		glBegin(GL_LINES);
+		glVertex3f(ax, ay, 0.0f);
+		my_t tx = compass[i]*(vx);
+		my_t ty = compass[i]*(vy);
+		glVertex3f(ax + tx, ay + ty, 0.0f);
+		glEnd();
 	}
 
 
@@ -670,6 +715,9 @@ void onMouseButton(int button, int state, int x, int y) {
 	my_t dx = 2 * (x - width*0.5) / width * ORTHO;
 	my_t dy = 2 * (y - height*0.5) / height * ORTHO;
 	//printf("mouse click on (%d, %d), (%I64d, %I64d)\n", x, y, dx, dy);
+	if(state == GLUT_DOWN)
+		printf("mouse click on (%d, %d), (%I64d, %I64d)\n", x, y, mapx+dx, mapy+dy);
+
 
 	if (button == GLUT_LEFT_BUTTON) {
 		if (state == GLUT_DOWN) {
@@ -750,31 +798,58 @@ void onKeyPress(unsigned char key, int x, int y) {
 
 int main(int argc, char* argv[])
 {
-	if (argc == 1) return 0;
+//	if (argc == 1) return 0;
 	int x, y;
+	int i, j;
 	my_t dx, dy;
 	x = atoi(argv[1]);
 	y = atoi(argv[2]);
+	//x = 1273600590;
+	//y = 363720970;
+	/*
 	y = height - y - 1;
 	dx = 2 * (x - width*0.5) / width * ORTHO;
 	dy = 2 * (y - height*0.5) / height * ORTHO;
-
+	*/
+	dx = x - mapx;
+	dy = y - mapy;
 	gx = dx;
 	gy = dy;
 
-	x = atoi(argv[3]);
-	y = atoi(argv[4]);
-	y = height - y - 1;
-	dx = 2 * (x - width*0.5) / width * ORTHO;
-	dy = 2 * (y - height*0.5) / height * ORTHO;
-
-	ax = dx;
-	ay = dy;
-
 	initialize();
-	signal_calculation();
-	int i, j;
+	int numHounds = atoi(argv[3]);
+	printf("[");
+	for (j = 0; j < numHounds; j++) {
+		x = atoi(argv[4+j*2]);
+		y = atoi(argv[5+j*2]);
+		/*
+		y = height - y - 1;
+		dx = 2 * (x - width*0.5) / width * ORTHO;
+		dy = 2 * (y - height*0.5) / height * ORTHO;
+		*/
+		//x = 1273613989;
+		//y = 363733969;
+		dx = x - mapx;
+		dy = y - mapy;
+		ax = dx;
+		ay = dy;
 
+		signal_calculation();
+		convertToCompass();
+		for (i = 0; i < NCOMPASS; i++) {
+			if (i == NCOMPASS - 1) printf("%d]", compass[i]);
+			else if (i == 0) printf("[%d, ", compass[i]);
+			else {
+				printf("%d, ", compass[i]);
+			}
+		}
+
+		if (j != numHounds - 1) printf(",");
+	}
+
+	printf("]");
+
+	/*
 	for (i = 0; i < N; i++) {
 		if (sig[i].dead) sig[i].ss = 0;
 
@@ -802,6 +877,7 @@ int main(int argc, char* argv[])
 			printf("%lld, ", sig[i].vy);
 		}
 	}
+	*/
 	
 	/*
 	glutInit(&argc, argv);

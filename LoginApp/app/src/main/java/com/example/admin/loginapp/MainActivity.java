@@ -5,6 +5,11 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Matrix;
+import android.graphics.Point;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -15,8 +20,10 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.google.android.gms.auth.api.Auth;
@@ -39,10 +46,12 @@ public class MainActivity extends AppCompatActivity implements
 
     private FirebaseAuth mAuth;
 
-    private Button LoginButton;
+    private Button GoogleLoginButton, LoginButton;
     private Button RegisterButton;
     private EditText editTextemail;
     private EditText editTextpass;
+    private ImageView imgView;
+    private Bitmap myMap;
 
     private ProgressDialog progressDialog;
 
@@ -59,13 +68,34 @@ public class MainActivity extends AppCompatActivity implements
         setContentView(R.layout.activity_main);
 
         progressDialog = new ProgressDialog(this);
+        GoogleLoginButton = (Button) findViewById(R.id.GoogleLoginButton);
         LoginButton = (Button) findViewById(R.id.LoginButton);
         RegisterButton = (Button) findViewById(R.id.RegisterButton);
         editTextemail = (EditText)findViewById(R.id.editTextemail);
         editTextpass = (EditText)findViewById(R.id.editTextpass);
+        imgView = (ImageView)findViewById(R.id.imageView);
+
+        myMap = BitmapFactory.decodeResource(getResources(), R.drawable.kaistmap);
+
+
+        Bitmap backBit = Bitmap.createBitmap(myMap.getWidth()*2, myMap.getHeight()*2, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(backBit);
+        canvas.drawARGB(255, 225, 225, 255);
+        canvas.drawBitmap(myMap, myMap.getWidth()/2, myMap.getHeight()/2, null);
+
+        int width = backBit.getWidth();
+        int height = backBit.getHeight();
+
+        backBit = Bitmap.createBitmap(backBit, width*3/6, height*3/6, width/10, height/10);
+        //backBit = Bitmap.createScaledBitmap(backBit, width, width * 3 / 4, true);
+
+        imgView.setImageBitmap(backBit);
+
+        Log.e(TAG, "Google Sign-In failed. " + myMap.getWidth() + "/" + myMap.getHeight());
 
         RegisterButton.setOnClickListener( this);
         LoginButton.setOnClickListener(this);
+        GoogleLoginButton.setOnClickListener(this);
 
 
 
@@ -131,12 +161,20 @@ public class MainActivity extends AppCompatActivity implements
 
     public void onClick(View view)
     {
-        if(view==LoginButton)
+        if(view==GoogleLoginButton)
         {
             //Login
             //userLogin();
             signIn();
         }
+
+        if(view==LoginButton)
+        {
+            //Login
+            userLogin();
+            //signIn();
+        }
+
 
         if(view==RegisterButton)
         {

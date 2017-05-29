@@ -447,16 +447,12 @@ Error:
 
 void convertToCompass() {
 	int i, j, hidx, sidx;
-	for (i = 0; i < 10; i++) {
-		for (j = 0; j < NCOMPASS; j++) {
-			count[i][j] = 0; //initialzie
-		}
-	}
 	double sum;
 
 	for (i = 0; i < num_hounds; i++) {
 		for (j = 0; j < NCOMPASS; j++) {
 			compass[i][j] = 0.0;
+			count[i][j] = 0; //initialzie
 		}
 	}
 
