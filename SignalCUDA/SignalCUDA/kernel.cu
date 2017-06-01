@@ -661,6 +661,7 @@ int main(int argc, char* argv[])
 	initialize();
 
 	printf("Number of signals: %d\n", N);
+	/*
 	ga = { 4200, 21200, 24800, 31800 };
 	printga(1);
 	signalCalcWithCuda();
@@ -692,7 +693,7 @@ int main(int argc, char* argv[])
 	printga(10);
 	signalCalcWithCuda();
 	printf("* Total testing time: %d ms, average time: %d ms.\n", total_testing_time, total_testing_time / 10);
-
+	*/
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGBA | GLUT_DEPTH);
 	glutInitWindowSize(width, height);

@@ -34,7 +34,7 @@ var signal;
 var cx = 1273623389;
 var cy = 363706170;
 
-
+var px, py;
 function calculateSignal(){
 	console.log('calculate signal');
 	var count = 0;
