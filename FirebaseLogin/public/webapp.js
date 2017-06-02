@@ -257,7 +257,9 @@ var handleSignedInUser = function(user) {
 			$('#create-game').click(function(){
 				gameroomRef.set({
 					creator: firebase.auth().currentUser.email,
-					state: 'ready',
+					state: 'ready'
+					/*
+					,
 					members: {
 						"-SAMPLEFOX": {
 							email: "fox@test.com",
@@ -278,6 +280,7 @@ var handleSignedInUser = function(user) {
 							role: "hound"
 						}
 					}
+					*/
 				});
 			});
 		}

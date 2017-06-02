@@ -29,13 +29,6 @@
             android:text="Logout"/>
     </android.support.v7.widget.LinearLayoutCompat>
 
-
-    <Chronometer
-        android:textAlignment="center"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textSize="30dp"/>
-
     <ExpandableListView
         android:id="@+id/elv_list"
         android:layout_width="368dp"

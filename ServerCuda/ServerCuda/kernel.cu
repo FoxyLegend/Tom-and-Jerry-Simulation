@@ -22,7 +22,7 @@
 #define RADIUS 1500
 #define RADSCALE 1000000000
 #define LINE_SIZE 0.3
-#define NCOMPASS 36
+#define NCOMPASS 360
 
 #define d2r(deg) (deg * PI / 180.0)
 #define kill(s) (s->dead = true)
@@ -42,7 +42,7 @@ int num_hounds;
 
 int width = 800, height = 800;
 signal sig[N];
-double compass[10][NCOMPASS];
+int compass[10][NCOMPASS];
 int count[10][NCOMPASS];
 int selection_mode = 0; //generator: 0, detector: 1
 
@@ -451,7 +451,7 @@ void convertToCompass() {
 
 	for (i = 0; i < num_hounds; i++) {
 		for (j = 0; j < NCOMPASS; j++) {
-			compass[i][j] = 0.0;
+			compass[i][j] = 0;
 			count[i][j] = 0; //initialzie
 		}
 	}
@@ -467,8 +467,8 @@ void convertToCompass() {
 		sidx = NCOMPASS * deg / 360;
 
 		if (!sig[i].dead) {
-			compass[hidx][sidx] += 10000000 / sig[i].ss;
-			count[hidx][sidx] ++;
+			compass[hidx][sidx] = 1000000000 / sig[i].ss;
+			count[hidx][sidx] = 1;
 		}
 		//compass[hidx]
 	}
@@ -506,17 +506,27 @@ int main(int argc, char* argv[])
 	
 	convertToCompass();
 
+
+	fprintf(stdout, "[");
 	for (j = 0; j < num_hounds; j++) {
+
+		fprintf(stdout, "[");
 		for (i = 0; i < NCOMPASS; i++) {
 			if (i == NCOMPASS - 1) {
-				fprintf(stdout, "%5.0f", compass[j][i]);
+				fprintf(stdout, "%d", compass[j][i]);
 			}
 			else {
-				fprintf(stdout, "%5.0f ", compass[j][i]);
+				fprintf(stdout, "%d, ", compass[j][i]);
 			}
 		}
-		fprintf(stdout, "\n");
+
+		if (j < num_hounds - 1) {
+			fprintf(stdout, "], ");
+		}
+		else fprintf(stdout, "]");
 	}
+
+	fprintf(stdout, "]");
 
 	/*
 	glutInit(&argc, argv);
