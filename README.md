@@ -97,15 +97,8 @@ function runCalculation(){
 runCalculation(); //initalize
 ```
 
-### [Open MPI](https://www.open-mpi.org/)
-Our first proposal included MPI technology, but now we only consider to use only GPU because it's enough.
-
 ### OpenCL-[NVIDIA CUDA](https://developer.nvidia.com/cuda-downloads)
 OpenCL should be installed based on your graphics processing unit (GPU). (e.g. AMD, NVIDIA) We are using CUDA from NVIDIA in this project.
 
-### [Unity 3D](https://unity3d.com/)
-In this project, we are using [reinterpret](https://github.com/reinterpretcat/utymap/)'s demo code. Make sure to install correctly. You can also run this demo code on Android.
-
-![alt tag](README/reinterpret_utymap.png)
 
 
