@@ -42,7 +42,11 @@ Implementation of virtual gears required for the sport called the Foxhunt game w
 	```
 	
 	first line: i, #of nodes, #of buildings, #of forests
-		
+	
+
+### OpenCL-[NVIDIA CUDA](https://developer.nvidia.com/cuda-downloads)
+OpenCL should be installed based on your graphics processing unit (GPU). (e.g. AMD, NVIDIA) We are using CUDA from NVIDIA in this project.
+	
 ### Signal Simulation
 * [4/22] Reflection Simulation on: # of signal:360
 
@@ -72,7 +76,7 @@ Implementation of virtual gears required for the sport called the Foxhunt game w
 
 [![Signal Simulation Web Socket](https://img.youtube.com/vi/h7f6DAYvjwM/0.jpg)](https://www.youtube.com/watch?v=h7f6DAYvjwM "Signal Simulation Web Socket")
 
-* **[6/5] Signal Simulation Development*
+* **[6/5] Signal Simulation Development**
 
 [![Signal Simulation Development](https://img.youtube.com/vi/Y0MLaJUGkLo/0.jpg)](https://www.youtube.com/watch?v=Y0MLaJUGkLo "Signal Simulation Development")
 
@@ -96,9 +100,5 @@ function runCalculation(){
 }
 runCalculation(); //initalize
 ```
-
-### OpenCL-[NVIDIA CUDA](https://developer.nvidia.com/cuda-downloads)
-OpenCL should be installed based on your graphics processing unit (GPU). (e.g. AMD, NVIDIA) We are using CUDA from NVIDIA in this project.
-
 
 
