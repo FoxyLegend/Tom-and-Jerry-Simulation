@@ -52,6 +52,7 @@ public class MainActivity extends AppCompatActivity implements
     private EditText editTextpass;
     private ImageView imgView;
     private Bitmap myMap;
+    private static final int MY_PERMISSIONS_REQUEST_GPS = 1;
 
     private ProgressDialog progressDialog;
 
@@ -66,6 +67,32 @@ public class MainActivity extends AppCompatActivity implements
         mAuth = FirebaseAuth.getInstance();
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        // Register the listener with the Location Manager to receive location updates
+        if (ActivityCompat.checkSelfPermission(getBaseContext(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                && ActivityCompat.checkSelfPermission(getBaseContext(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // 권한 획득에 대한 설명 보여주기
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                    android.Manifest.permission.ACCESS_FINE_LOCATION)) {
+
+                // 사용자에게 권한 획득에 대한 설명을 보여준 후 권한 요청을 수행
+
+            } else if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                    android.Manifest.permission.ACCESS_COARSE_LOCATION)) {
+
+                // 사용자에게 권한 획득에 대한 설명을 보여준 후 권한 요청을 수행
+
+            }
+            else {
+
+                // 권한 획득의 필요성을 설명할 필요가 없을 때는 아래 코드를
+                //수행해서 권한 획득 여부를 요청한다.
+
+                ActivityCompat.requestPermissions(this,
+                        new String[]{ android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION},
+                        MY_PERMISSIONS_REQUEST_GPS);
+
+            }
+        }
 
         progressDialog = new ProgressDialog(this);
         GoogleLoginButton = (Button) findViewById(R.id.GoogleLoginButton);

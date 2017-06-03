@@ -63,20 +63,18 @@ public class MapActivity extends AppCompatActivity implements View.OnClickListen
     double signal[] = new double[360];
     double mx, my, gpsx, gpsy;
 
+    boolean IamFox = false;
+
     double lat, lng;
     boolean GPSMode = false;
     final static double mapx = 127.3623389;
     final static double mapy = 36.3706170;
     Bitmap myMap;
+    Bitmap backBit;
     Bitmap getMinimap(){
-        Bitmap backBit = Bitmap.createBitmap(myMap.getWidth() * 2, myMap.getHeight() * 2, Bitmap.Config.ARGB_8888);
+        Bitmap result;
         int ppx = (int)((mx - mapx) * 1e7 + 80000);
         int ppy = (int)((my - mapy) * 1e7 + 80000);
-
-        Canvas canvas = new Canvas(backBit);
-        canvas.drawARGB(255, 225, 225, 255);
-        canvas.drawBitmap(myMap, myMap.getWidth() / 2, myMap.getHeight() / 2, null);
-
 
         int width = backBit.getWidth();
         //int height = backBit.getHeight();
@@ -90,9 +88,9 @@ public class MapActivity extends AppCompatActivity implements View.OnClickListen
 
 
             int margin = myMap.getWidth() / 2;
-            backBit = Bitmap.createBitmap(backBit, px - cropwidth + margin, backBit.getHeight() - (py + margin) - cropheight, cropwidth * 2, cropheight * 2);
+            result = Bitmap.createBitmap(backBit, px - cropwidth + margin, backBit.getHeight() - (py + margin) - cropheight, cropwidth * 2, cropheight * 2);
 
-            Canvas ncanvans = new Canvas(backBit);
+            Canvas ncanvans = new Canvas(result);
             Paint Pnt = new Paint();
 
             float ax = ncanvans.getWidth()/2;
@@ -101,22 +99,27 @@ public class MapActivity extends AppCompatActivity implements View.OnClickListen
             for(int i = 0; i < 360; i++){
                 double length = signal[i];
                 double rad = i * Math.PI / 180;
-                float tx = (float) (Math.cos(rad) * length / 300.0);
-                float ty = (float) (Math.sin(rad) * length / 300.0);
+                float tx = (float) (Math.cos(rad) * length / 500.0);
+                float ty = (float) (Math.sin(rad) * length / 500.0);
                 ncanvans.drawLine(ax,ay,ax+tx,ay-ty,Pnt);
             }
 
-            Pnt.setColor(Color.BLUE);
+            if (IamFox){
+                Pnt.setColor(Color.RED);
+            }
+            else{
+                Pnt.setColor(Color.BLUE);
+            }
+
             ncanvans.drawCircle(ax,ay,10,Pnt);
 
             //backBit = Bitmap.createScaledBitmap(backBit, width, width * 3 / 4, true);
         }
         else {
-
-            backBit = Bitmap.createBitmap(backBit, 0, 0, cropwidth * 2, cropheight * 2);
+            result = Bitmap.createBitmap(backBit, 0, 0, cropwidth * 2, cropheight * 2);
         }
 
-        return backBit;
+        return result;
     }
 
     String tprint(int time){
@@ -142,8 +145,14 @@ public class MapActivity extends AppCompatActivity implements View.OnClickListen
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map);
 
-        imgView = (ImageView) findViewById(R.id.mapImageView);
         myMap = BitmapFactory.decodeResource(getResources(), R.drawable.kaistmap);
+        backBit = Bitmap.createBitmap(myMap.getWidth() * 2, myMap.getHeight() * 2, Bitmap.Config.ARGB_8888);
+
+        Canvas canvas = new Canvas(backBit);
+        canvas.drawARGB(255, 225, 225, 255);
+        canvas.drawBitmap(myMap, myMap.getWidth() / 2, myMap.getHeight() / 2, null);
+
+        imgView = (ImageView) findViewById(R.id.mapImageView);
         N1Button = (Button) findViewById(R.id.N1);
         E3Button = (Button) findViewById(R.id.E3);
         KISTIButton = (Button) findViewById(R.id.KISTI);
@@ -210,12 +219,8 @@ public class MapActivity extends AppCompatActivity implements View.OnClickListen
                     Log.e(TAG, "HERE myUID = " + myUID);
 
                     if (myUID != null) {
-                        gpsx = Double.parseDouble(dataSnapshot.child("members").child(myUID).child("lng").getValue().toString());
-                        gpsy = Double.parseDouble(dataSnapshot.child("members").child(myUID).child("lat").getValue().toString());
-                        if(GPSMode){
-                            mx = gpsx;
-                            my = gpsy;
-                        }
+                        mDatabase.child("members").child(myUID).child("lng").setValue(mx);
+                        mDatabase.child("members").child(myUID).child("lat").setValue(my);
 
                         if(dataSnapshot.child("members").child(myUID).child("signal").exists()){
                             String sigStr = dataSnapshot.child("members").child(myUID).child("signal").getValue().toString();
@@ -227,6 +232,10 @@ public class MapActivity extends AppCompatActivity implements View.OnClickListen
                             } catch (JSONException e) {
                                 e.printStackTrace();
                             }
+                            IamFox = false;
+                        }
+                        else {
+                            IamFox = true;
                         }
                     }
 
@@ -324,10 +333,10 @@ public class MapActivity extends AppCompatActivity implements View.OnClickListen
             if (v == KISTIButton)
             {
                 mx = 127.36089889999998;
-                my = 36.36979689999988;
-            }
+            my = 36.36979689999988;
+        }
 
-            //
+        //
             if (v == upButton)
             {
                 my += move_unit;
@@ -355,8 +364,6 @@ public class MapActivity extends AppCompatActivity implements View.OnClickListen
             DEMOButton.setChecked(false);
             mx = gpsx;
             my = gpsy;
-            mDatabase.child("members").child(myUID).child("lng").setValue(gpsx);
-            mDatabase.child("members").child(myUID).child("lat").setValue(gpsy);
         }
         if (v == DEMOButton)
         {

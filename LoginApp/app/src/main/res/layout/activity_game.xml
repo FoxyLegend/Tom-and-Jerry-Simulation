@@ -42,7 +42,7 @@
         android:layout_height="match_parent"
         android:scrollbarAlwaysDrawVerticalTrack="true"
         android:text="TextView"
-        tools:layout_editor_absoluteY="-178dp"
-        tools:layout_editor_absoluteX="-249dp" />
+        android:textColor="@android:color/black"
+        android:textSize="25dp"/>
 
 </android.support.v7.widget.LinearLayoutCompat>

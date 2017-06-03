@@ -17,7 +17,7 @@ app.get('/', function (req, res) {
 app.listen(3000, function () {
   console.log('Example app listening on port 3000!');
 });
-
+available = true;
 var db = admin.database();
 var ref = db.ref("gameroom");
 var calculate = false;
@@ -47,9 +47,13 @@ function calculateSignal(){
 			ref.child("members").child(mid).remove();
 		}
 		else {
-			if(m.lng && m.lat){				
+			if(m.lng && m.lat){
 				px = parseInt(m.lng * 1e7);
 				py = parseInt(m.lat * 1e7);
+			}
+			else {
+				px = 0;
+				py = 0;
 			}
 			
 			if(m.role == 'fox'){
@@ -72,13 +76,12 @@ function calculateSignal(){
 	}
 	signal = null;
 	
-	var prog = "SeqProgram.exe " + gx + " " + gy + " " + hid.length;
+	var prog = "ServerCuda.exe " + gx + " " + gy + " " + hid.length;
 	for (var i in hid){
 		id = hid[i];
 		prog += " " + ax[id] + " " + ay[id];
 	}
 	console.log(prog);
-	
 	exec(prog, (err, stdout, stderr) => {
 		if (err) {
 			console.error(err);
@@ -94,6 +97,7 @@ function calculateSignal(){
 			id = hid[i];
 			ref.child("members").child(id).child("signal").set(JSON.stringify(signal[i]));
 		}
+		available = true;
 	});
 	
 	
@@ -131,7 +135,8 @@ ref.child("state").on("value", function(snapshot){
 		ref.child("time").set(timer);
 		
 		intervalID = setInterval(function(){
-			if(timer%3 == 0){
+			if(timer%1 == 0 && available){
+				available = false;
 				console.log("calculating the signal");
 				calculateSignal();
 			}

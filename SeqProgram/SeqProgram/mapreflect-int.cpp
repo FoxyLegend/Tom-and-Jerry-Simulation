@@ -846,8 +846,16 @@ int main(int argc, char* argv[])
 			ax = dx;
 			ay = dy;
 
-			signal_calculation();
-			convertToCompass();
+			if (gx == ax && gy == ay) {
+				for (i = 0; i < NCOMPASS; i++)
+					compass[i] = 0;
+			}
+			else {
+				signal_calculation();
+				convertToCompass();
+			}
+
+			
 			for (i = 0; i < NCOMPASS; i++) {
 				if (i == NCOMPASS - 1) printf("%d]", compass[i]);
 				else if (i == 0) printf("[%d, ", compass[i]);

@@ -36,7 +36,7 @@ import java.util.ArrayList;
 public class GameActivity extends AppCompatActivity implements View.OnClickListener {
 
     private FirebaseAuth mAuth;
-    private TextView userEmail;
+    private TextView stateText;
     private Button buttonJoin, buttonLogout;
 
     final private DatabaseReference
@@ -80,8 +80,8 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
 
         Log.e(TAG, "Authorized anyway");
 
-        userEmail = (TextView) findViewById(R.id.textView);
-        userEmail.setText("NOT INITIALIZED");
+        stateText = (TextView) findViewById(R.id.textView);
+        stateText.setText("Initializing ...");
 
         buttonLogout = (Button)findViewById(R.id.logout_button);
         buttonLogout.setOnClickListener(this);
@@ -199,24 +199,33 @@ public class GameActivity extends AppCompatActivity implements View.OnClickListe
                             buttonJoin.setText("Exit");
                         }
 
-                        userEmail.setText(
+                        /*
+                        stateText.setText(
                                 dataSnapshot.child("creator").getValue().toString() + "\n"
                                         + txt
                                         + dataSnapshot.child("members").getChildrenCount() + "\n"
                                         + dataSnapshot.child("state").getValue().toString()
                         );
+                        */
                         Log.e(TAG, "Data loaded successfully." + dataSnapshot.getValue());
 
-
-                        if(dataSnapshot.child("state").getValue().toString().equalsIgnoreCase("ready"))
+                        String myState = dataSnapshot.child("state").getValue().toString();
+                        if(myState.equalsIgnoreCase("ready")){
                             buttonAvailable = true;
-                        else
+                            stateText.setText("Ready");
+                        }
+                        else if(myState.equalsIgnoreCase("starting") && dataSnapshot.child("time").exists()){
                             buttonAvailable = false;
+                            stateText.setText("Game starts in " + dataSnapshot.child("time").getValue().toString() + " seconds...");
+                        }
+                        else {
+                            buttonAvailable = false;
+                        }
 
                     }
                 }
                 else {
-                    userEmail.setText("*** There is no game room ***");
+                    stateText.setText("No game room found");
                     Log.e(TAG, "Data not exist.");
                 }
                 mBaseAdapter.notifyDataSetChanged();
