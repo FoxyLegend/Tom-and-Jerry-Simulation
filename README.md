@@ -72,6 +72,14 @@ Implementation of virtual gears required for the sport called the Foxhunt game w
 
 [![Signal Simulation Web Socket](https://img.youtube.com/vi/h7f6DAYvjwM/0.jpg)](https://www.youtube.com/watch?v=h7f6DAYvjwM "Signal Simulation Web Socket")
 
+* **[6/5] Signal Simulation Development*
+
+[![Signal Simulation Development](https://img.youtube.com/vi/Y0MLaJUGkLo/0.jpg)](https://www.youtube.com/watch?v=Y0MLaJUGkLo "Signal Simulation Development")
+
+* **[6/5] Transmitter Hunting DEMO**
+
+[![Transmitter Hunting DEMO](https://img.youtube.com/vi/ayTxKpPJf4c/0.jpg)](https://www.youtube.com/watch?v=ayTxKpPJf4c "Transmitter Hunting DEMO")
+
 ### Online realtime signal simulation prototyping
 We used node.js, socket.io, and pixi.js. (see WebGraphic and SeqProgram for this)
 
