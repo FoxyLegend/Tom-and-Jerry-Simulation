@@ -499,7 +499,7 @@ int main(int argc, char* argv[])
 		lon = atoll(argv[4 + i*2]);
 		lat = atoll(argv[5 + i*2]);
 		GameInfo.ax[i] = lon - (my_t)MAPX;
-		GameInfo.ay[i] = lat - (my_t)MAPY;	
+		GameInfo.ay[i] = lat - (my_t)MAPY;
 	}
 
 	signalCalcWithCuda();

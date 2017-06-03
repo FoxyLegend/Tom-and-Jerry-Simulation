@@ -76,30 +76,43 @@ function calculateSignal(){
 	}
 	signal = null;
 	
-	var prog = "ServerCuda.exe " + gx + " " + gy + " " + hid.length;
-	for (var i in hid){
+	for(var i in hid){
 		id = hid[i];
-		prog += " " + ax[id] + " " + ay[id];
-	}
-	console.log(prog);
-	exec(prog, (err, stdout, stderr) => {
-		if (err) {
-			console.error(err);
+		if(ax[id] == 0 && ay[id] == 0){
+			available = true;
 			return;
 		}
-		//console.log(stdout);
-		signal = JSON.parse(stdout);
-		//console.log(signal);
-		
-		//console.log(hid[0], signal);
-		console.log("Newly calculated: ", (new Date()).toGMTString(), signal.length);
+	}
+	
+	if (gx == 0 && gy == 0){
+		available = true;
+		return;
+	}
+	else {
+		var prog = "ServerCuda.exe " + gx + " " + gy + " " + hid.length;
 		for (var i in hid){
 			id = hid[i];
-			ref.child("members").child(id).child("signal").set(JSON.stringify(signal[i]));
+			prog += " " + ax[id] + " " + ay[id];
 		}
-		available = true;
-	});
-	
+		console.log(prog);
+		exec(prog, (err, stdout, stderr) => {
+			if (err) {
+				console.error(err);
+				return;
+			}
+			//console.log(stdout);
+			signal = JSON.parse(stdout);
+			//console.log(signal);
+			
+			//console.log(hid[0], signal);
+			console.log("Newly calculated: ", (new Date()).toGMTString(), signal.length);
+			for (var i in hid){
+				id = hid[i];
+				ref.child("members").child(id).child("signal").set(JSON.stringify(signal[i]));
+			}
+			available = true;
+		});
+	}
 	
 	
 	

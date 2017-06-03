@@ -172,6 +172,10 @@ var handleSignedInUser = function(user) {
 						px = (parseInt(m.lng * 1e7) - cx) * 400 / 80000 + 400;
 						py = -(parseInt(m.lat * 1e7) - cy) * 400 / 80000 + 400;
 					}
+					else {
+						px = 0;
+						py = 0;
+					}
 					
 					if(m.role == 'fox'){
 						fx = px;
