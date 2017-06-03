@@ -178,11 +178,6 @@ var handleSignedInUser = function(user) {
 						fy = py;
 					}
 					if(m.role == 'hound'){
-						graphics.moveTo(0, 0);
-						graphics.lineStyle(0);
-						graphics.beginFill(0x0000FF, 1);
-						graphics.drawCircle(px, py, 5);
-						
 						if(m.signal){
 							var sig = JSON.parse(m.signal);
 							
@@ -199,6 +194,11 @@ var handleSignedInUser = function(user) {
 							}
 							
 						}
+						graphics.moveTo(0, 0);
+						graphics.lineStyle(0);
+						graphics.beginFill(0x0000FF, 1);
+						graphics.drawCircle(px, py, 10);
+						
 					}
 				}
 				
@@ -207,7 +207,7 @@ var handleSignedInUser = function(user) {
 				graphics.moveTo(0, 0);
 				graphics.lineStyle(0);
 				graphics.beginFill(0xFF0000, 1);
-				graphics.drawCircle(fx, fy, 5);
+				graphics.drawCircle(fx, fy, 10);
 			}
 			else {				
 				var ulm = $("<ul>").append($("<h4>").text("MEMBERS"));
