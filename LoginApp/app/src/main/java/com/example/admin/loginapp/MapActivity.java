@@ -256,8 +256,10 @@ public class MapActivity extends AppCompatActivity implements View.OnClickListen
                 gpsx = location.getLongitude();
 
                 if (myUID != null && GPSMode) {
-                    mDatabase.child("members").child(myUID).child("lat").setValue(gpsy);
-                    mDatabase.child("members").child(myUID).child("lng").setValue(gpsx);
+                    mx = gpsx;
+                    my = gpsy;
+                    mDatabase.child("members").child(myUID).child("lat").setValue(my);
+                    mDatabase.child("members").child(myUID).child("lng").setValue(mx);
                 }
             }
 
