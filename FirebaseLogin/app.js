@@ -78,17 +78,16 @@ function calculateSignal(){
 	
 	for(var i in hid){
 		id = hid[i];
-		if(ax[id] == 0 && ay[id] == 0){
+		if((ax[id] == 0 && ay[id] == 0) || (gx == ax[id] && gy == ay[id])){
 			available = true;
-			return;
 		}
 	}
 	
 	if (gx == 0 && gy == 0){
 		available = true;
-		return;
 	}
-	else {
+
+	if (available == false) {
 		var prog = "ServerCuda.exe " + gx + " " + gy + " " + hid.length;
 		for (var i in hid){
 			id = hid[i];

@@ -204,8 +204,10 @@ public class MapActivity extends AppCompatActivity implements View.OnClickListen
                     startActivity(new Intent(getBaseContext(), GameActivity.class));
                 }
                 else {
-                    Log.e(TAG, "TIME = " + dataSnapshot.child("time").getValue());
-                    timer.setText(tprint(Integer.parseInt(dataSnapshot.child("time").getValue().toString())));
+                    if(dataSnapshot.child("time").exists()){
+                        Log.e(TAG, "TIME = " + dataSnapshot.child("time").getValue());
+                        timer.setText(tprint(Integer.parseInt(dataSnapshot.child("time").getValue().toString())));
+                    }
                     Member member;
                     for (DataSnapshot ds : dataSnapshot.child("members").getChildren()){
                         member = ds.getValue(Member.class);
@@ -218,7 +220,7 @@ public class MapActivity extends AppCompatActivity implements View.OnClickListen
                     }
                     Log.e(TAG, "HERE myUID = " + myUID);
 
-                    if (myUID != null) {
+                    if (dataSnapshot.child("members").child(myUID).exists()) {
                         mDatabase.child("members").child(myUID).child("lng").setValue(mx);
                         mDatabase.child("members").child(myUID).child("lat").setValue(my);
 
@@ -232,10 +234,17 @@ public class MapActivity extends AppCompatActivity implements View.OnClickListen
                             } catch (JSONException e) {
                                 e.printStackTrace();
                             }
-                            IamFox = false;
                         }
                         else {
                             IamFox = true;
+                        }
+
+                        String roleStr = dataSnapshot.child("members").child(myUID).child("role").getValue().toString();
+                        if(roleStr.equalsIgnoreCase("fox")){
+                            IamFox = true;
+                        }
+                        else {
+                            IamFox = false;
                         }
                     }
 
