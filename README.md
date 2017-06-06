@@ -2,11 +2,11 @@
 Implementation of virtual gears required for the sport called the Foxhunt game where ‘hounds’ hunt down ‘a fox’ by observing the virtual signal calculated from a signal simulation using real GPS and Map data using mobile smartphones and multi-core processing server. We renamed to Tom-and-Jerry game for intuitive understanding of this game.
 
 ## Presentation
-* **Final Presentation (EOSP)**: click to play the video on YouTube.
+* **[6/5] Final Presentation (EOSP)**: click to play the video on YouTube.
 [![End of Semester Presentation](https://img.youtube.com/vi/EyGnM-HKcuA/0.jpg)](https://www.youtube.com/watch?v=EyGnM-HKcuA "End of Semester Presentation")
 
 
-* **Interim Presentation(MOSP)**: click to play the video on YouTube.
+* **[4/10] Interim Presentation(MOSP)**: click to play the video on YouTube.
 [![Middle of Semester Presentation](https://img.youtube.com/vi/RQ_oRsLWNQ4/0.jpg)](https://www.youtube.com/watch?v=RQ_oRsLWNQ4 "Middle of Semester Presentation")
 
 
