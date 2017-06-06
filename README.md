@@ -3,19 +3,15 @@ Implementation of virtual gears required for the sport called the Foxhunt game w
 
 ## Presentation
 * **[6/5] Final Presentation (EOSP)**: click to play the video on YouTube.
-
 [![End of Semester Presentation](https://img.youtube.com/vi/EyGnM-HKcuA/0.jpg)](https://www.youtube.com/watch?v=EyGnM-HKcuA "End of Semester Presentation")
 
 * **[4/10] Interim Presentation(MOSP)**: click to play the video on YouTube.
-
 [![Middle of Semester Presentation](https://img.youtube.com/vi/RQ_oRsLWNQ4/0.jpg)](https://www.youtube.com/watch?v=RQ_oRsLWNQ4 "Middle of Semester Presentation")
 
 * **Signal Simulation Development Footage**: click to play the video on YouTube.
-
 [![Signal Simulation Presentation](https://img.youtube.com/vi/Y0MLaJUGkLo/0.jpg)](https://www.youtube.com/watch?v=Y0MLaJUGkLo "Signal Simulation")
 
 * **App Alpha Test**: click to play the video on YouTube.
-
 [![App Alpha Test](https://img.youtube.com/vi/ayTxKpPJf4c/0.jpg)](https://www.youtube.com/watch?v=ayTxKpPJf4c "App Alpha Test")
 
 
