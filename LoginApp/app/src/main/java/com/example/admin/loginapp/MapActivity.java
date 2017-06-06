@@ -204,21 +204,26 @@ public class MapActivity extends AppCompatActivity implements View.OnClickListen
                     startActivity(new Intent(getBaseContext(), GameActivity.class));
                 }
                 else {
+                    if(!dataSnapshot.exists()){
+                        return;
+                    }
+
                     if(dataSnapshot.child("time").exists()){
                         Log.e(TAG, "TIME = " + dataSnapshot.child("time").getValue());
                         timer.setText(tprint(Integer.parseInt(dataSnapshot.child("time").getValue().toString())));
                     }
                     Member member;
-                    for (DataSnapshot ds : dataSnapshot.child("members").getChildren()){
-                        member = ds.getValue(Member.class);
+                    if(dataSnapshot.child("members").exists()){
+                        for (DataSnapshot ds : dataSnapshot.child("members").getChildren()){
+                            member = ds.getValue(Member.class);
 
-                        Log.e(TAG, "EQUAL = " + user.getEmail() + " ~~~~ " + member.email);
-                        if(user.getEmail().equalsIgnoreCase(member.email)){
-                            myUID = ds.getKey().toString();
+                            Log.e(TAG, "EQUAL = " + user.getEmail() + " ~~~~ " + member.email);
+                            if(user.getEmail().equalsIgnoreCase(member.email)){
+                                myUID = ds.getKey().toString();
 
+                            }
                         }
                     }
-                    Log.e(TAG, "HERE myUID = " + myUID);
 
                     if (dataSnapshot.child("members").child(myUID).exists()) {
                         mDatabase.child("members").child(myUID).child("lng").setValue(mx);
@@ -239,12 +244,14 @@ public class MapActivity extends AppCompatActivity implements View.OnClickListen
                             IamFox = true;
                         }
 
-                        String roleStr = dataSnapshot.child("members").child(myUID).child("role").getValue().toString();
-                        if(roleStr.equalsIgnoreCase("fox")){
-                            IamFox = true;
-                        }
-                        else {
-                            IamFox = false;
+                        if(dataSnapshot.child("members").child(myUID).child("role").exists()){
+                            String roleStr = dataSnapshot.child("members").child(myUID).child("role").getValue().toString();
+                            if(roleStr.equalsIgnoreCase("fox")){
+                                IamFox = true;
+                            }
+                            else {
+                                IamFox = false;
+                            }
                         }
                     }
 

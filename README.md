@@ -6,6 +6,9 @@ Implementation of virtual gears required for the sport called the Foxhunt game w
 
 [![Middle of Semester Presentation](https://img.youtube.com/vi/RQ_oRsLWNQ4/0.jpg)](https://www.youtube.com/watch?v=RQ_oRsLWNQ4 "Middle of Semester Presentation")
 
+
+[![End of Semester Presentation](https://img.youtube.com/vi/EyGnM-HKcuA/0.jpg)](https://www.youtube.com/watch?v=EyGnM-HKcuA "End of Semester Presentation")
+
 ## Introduction
 ![alt tag](README/introduction.jpg)
 
