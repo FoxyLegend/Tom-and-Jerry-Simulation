@@ -16,7 +16,7 @@ Implementation of virtual gears required for the sport called the Foxhunt game w
 
 * **App Alpha Test**: click to play the video on YouTube.
 
-[![App Alpha Test Presentation](https://img.youtube.com/vi/ayTxKpPJf4c/0.jpg)](https://www.youtube.com/watch?v=ayTxKpPJf4c "App Alpha Test")
+[![App Alpha Test](https://img.youtube.com/vi/ayTxKpPJf4c/0.jpg)](https://www.youtube.com/watch?v=ayTxKpPJf4c "App Alpha Test")
 
 
 ## Introduction
