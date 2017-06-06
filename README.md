@@ -50,8 +50,30 @@ Implementation of virtual gears required for the sport called the Foxhunt game w
 
 ### OpenCL-[NVIDIA CUDA](https://developer.nvidia.com/cuda-downloads)
 OpenCL should be installed based on your graphics processing unit (GPU). (e.g. AMD, NVIDIA) We are using CUDA from NVIDIA in this project.
+
+
+### Online realtime signal simulation prototyping
+We used node.js, socket.io, and pixi.js. (see WebGraphic and SeqProgram for this)
+
+```javascript
+function runCalculation(){
+	var prog = "SeqProgram.exe " + position.gx + " " + position.gy + " " + position.ax + " " + position.ay;
+	exec(prog, (err, stdout, stderr) => {
+		if (err) {
+			console.error(err);
+			return;
+		}
+		signal = JSON.parse(stdout);
+	});
+}
+runCalculation(); //initalize
+```
+
+### [Firebase](https://firebase.google.com/)
+Our team used firebase for user authorization and realtime signal data synchronization.
+
 	
-### Signal Simulation
+### Signal Simulation Footage
 * [4/22] Reflection Simulation on: # of signal:360
 
 [![Signal Simulation](https://img.youtube.com/vi/6H-wo_vZulA/0.jpg)](https://www.youtube.com/watch?v=6H-wo_vZulA "Signal Simulation")
@@ -87,22 +109,4 @@ OpenCL should be installed based on your graphics processing unit (GPU). (e.g. A
 * **[6/5] Transmitter Hunting DEMO**
 
 [![Transmitter Hunting DEMO](https://img.youtube.com/vi/ayTxKpPJf4c/0.jpg)](https://www.youtube.com/watch?v=ayTxKpPJf4c "Transmitter Hunting DEMO")
-
-### Online realtime signal simulation prototyping
-We used node.js, socket.io, and pixi.js. (see WebGraphic and SeqProgram for this)
-
-```javascript
-function runCalculation(){
-	var prog = "SeqProgram.exe " + position.gx + " " + position.gy + " " + position.ax + " " + position.ay;
-	exec(prog, (err, stdout, stderr) => {
-		if (err) {
-			console.error(err);
-			return;
-		}
-		signal = JSON.parse(stdout);
-	});
-}
-runCalculation(); //initalize
-```
-
 
