@@ -10,6 +10,14 @@ Implementation of virtual gears required for the sport called the Foxhunt game w
 [![Middle of Semester Presentation](https://img.youtube.com/vi/RQ_oRsLWNQ4/0.jpg)](https://www.youtube.com/watch?v=RQ_oRsLWNQ4 "Middle of Semester Presentation")
 
 
+* **Signal Simulation Development Footage**: click to play the video on YouTube.
+[![Signal Simulation Presentation](https://img.youtube.com/vi/Y0MLaJUGkLo/0.jpg)](https://www.youtube.com/watch?v=Y0MLaJUGkLo "Signal Simulation")
+
+
+* **App Alpha Test**: click to play the video on YouTube.
+[![App Alpha Test Presentation](https://img.youtube.com/vi/ayTxKpPJf4c/0.jpg)](https://www.youtube.com/watch?v=ayTxKpPJf4c "App Alpha Test")
+
+
 ## Introduction
 ![alt tag](README/introduction.jpg)
 
@@ -73,7 +81,7 @@ runCalculation(); //initalize
 Our team used firebase for user authorization and realtime signal data synchronization.
 
 	
-## Signal Simulation Footage
+## Signal Simulation Development Footage
 * [4/22] Reflection Simulation on: # of signal:360
 
 [![Signal Simulation](https://img.youtube.com/vi/6H-wo_vZulA/0.jpg)](https://www.youtube.com/watch?v=6H-wo_vZulA "Signal Simulation")
